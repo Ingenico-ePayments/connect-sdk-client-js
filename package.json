@@ -1,0 +1,15 @@
+{
+  "name": "gcsdk",
+  "version": "1.0.0",
+  "description": "The JavaScript based client SDK that can be used for client to server communication between you and GlobalCollect",
+  "dependencies": {
+    "gulp": "*",
+    "gulp-concat": "*",
+    "gulp-uglify": "*",
+    "gulp-minify-css": "*",
+    "gulp-usemin": "*",
+    "gulp-clean": "*",
+    "gulp-strip-debug": "*",
+    "gulp-sourcemaps": "*"
+  }
+}

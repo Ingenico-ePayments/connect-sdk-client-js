@@ -1,0 +1,374 @@
+@startuml
+
+' This is a plantUML (http://plantuml.sourceforge.net/) file that contains the class diagram of the JS SDK.
+
+
+title <b>JavaScript SDK class diagram</b>
+
+skinparam class {
+	BackgroundColor #F0F9FC
+	ArrowColor #0091CF
+	BorderColor #0091CF
+}
+
+package "client API response wrappers" <<Rect>> {
+	 
+	class PaymentProducts #f2f2f2 {
+		+JSON json	
+		+Array<AccountOnFile> accountsOnFile
+		+AssociativeArray<String, AccountOnFile> accountOnFileById
+		+Array<BasicPaymentProduct> paymentProducts
+		+AssociativeArray<String, BasicPaymentProduct> paymentProductById
+		+AssociativeArray<String, BasicPaymentProduct> paymentProductByAccountOnFileId
+	}
+
+	class BasicPaymentProduct #f2f2f2 {
+		+JSON json	
+		+String id
+		+Boolean allowsRecurring
+		+Boolean allowsTokenization
+		+Boolean autoTokenized
+		+MobileIntegrationLevel mobileIntegrationLevel
+		+DisplayHints displayHints
+		+Number minAmount
+		+Number maxAmount
+		+Boolean usesRedirectionTo3rdParty
+		+Array<AccountOnFile> accountsOnFile
+		+AssociativeArray<String, AccountOnFile> accountOnFileById		
+	} 
+
+	class PaymentProduct #f2f2f2 {
+		+JSON json	
+		+Array<PaymentProductField> paymentProductFields
+		+AssociativeArray<String, PaymentProductField> paymentProductFieldById
+	} 
+
+	class AccountOnFile #f2f2f2 {
+		+JSON json	
+		+String id
+		+String paymentProductId
+		+String displayText
+		+Array<Attribute> attributes
+		+AssociativeArray<String, Attribute> attributeByKey
+		+AccountOnFileDisplayHints displayHints
+		+String getMaskedValueByAttributeKey(String attributeKey)
+	}
+	
+	class Attribute #f2f2f2 {
+		+JSON json
+		+String key
+		+String value
+		+AccountOnFileAttributeStatus status
+		+String mustWriteReason
+	}
+	
+	class LabelTemplateElement #f2f2f2 {
+		+JSON json
+		+String attributeKey
+		+String mask
+		+String wildcardMask
+	}
+
+	class AccountOnFileDisplayHints #f2f2f2 {
+		+JSON json
+		+Array<labelTemplateElement> labelTemplate
+		+AssociativeArray<String, labelTemplateElement> labelTemplateElementByAttributeKey
+	}
+	
+	class PaymentProductField #f2f2f2 {
+		+JSON json	
+		+String id
+		+String type
+		+Number displayOrder
+		+DisplayHints displayHints
+		+DataRestrictions dataRestrictions
+		+Array<String> getErrorCodes(String value)
+		+Boolean isValid(String value)
+		+String applyMask(String newValue, String oldValue)
+		+String applyWildcardMask(String newValue, String oldValue)
+		+String removeMask(String value)
+	}
+
+	class PaymentProductDisplayHints #f2f2f2 {
+		+JSON json	
+		+Number displayOrder	
+		+String label
+		+String logo
+	}
+	class PaymentProductFieldDisplayHints #f2f2f2 {
+		+JSON json	
+		+PreferredInputType preferredInputType
+		+FormElement formElement
+		+String mask
+		+String wildcardMask
+		+Boolean obfuscate
+		+Number displayOrder	
+		+String label
+		+String placeholderLabel
+		+Tooltip tooltip
+		+Boolean alwaysShow
+	}
+
+	class DataRestrictions #f2f2f2 {
+		+JSON json
+		+Boolean isRequired
+		+Array<ValidationRule> validationRules
+		+ValidationRule getValidationRuleByType(String type)
+	}
+
+	abstract class ValidationRule #f2f2f2 {
+		+JSON json
+		+String errorMessageId
+		+String type
+		+Boolean validate(String value)
+	}
+
+    class ValidationRuleFactory #f2f2f2 {
+        +Validation makeValidator(JSON json)
+    }
+
+	class ValidationRuleRegularExpression #f2f2f2 {
+		+String regularExpression
+	}
+
+	class ValidationRuleEmailAddress #f2f2f2 {
+	}
+
+	class ValidationRuleExpirationDate #f2f2f2 {
+	}
+
+	class ValidationRuleFixedList #f2f2f2 {
+		+Array<String> allowedValues
+	}
+
+	class ValidationRuleLength #f2f2f2 {
+		+Number minLength
+		+Number maxLength
+	}
+
+	class ValidationRuleLuhn #f2f2f2 {
+	}
+
+	class ValidationRuleRange #f2f2f2 {
+		+Number minValue
+		+Number maxValue
+	}
+
+	class IinDetailsResponse #f2f2f2 {
+		+JSON json
+		+String paymentProductId
+		+IinStatus status
+		+String countryCode
+	}
+
+	class PublicKeyResponse #f2f2f2 {
+		+JSON json
+		+String keyId
+		+String publicKey
+	}
+
+	class Tooltip #f2f2f2 {
+		+JSON json
+		+String image
+		+String label
+	}
+
+	class FormElement #f2f2f2 {
+		+JSON json
+		+FormElementType type
+		+Array<ValueMappingElement> valueMapping
+	}
+
+	class ValueMappingElement #f2f2f2 {
+		+JSON json		
+		+String displayName
+		+String value
+	}
+	
+	enum PreferredInputType #f2f2f2 {
+		STRING_KEYBOARD
+		INTEGER_KEYBOARD
+		EMAILADDRESS_KEYBOARD
+		PHONENUMBER_KEYBOARD
+	}
+
+	enum FormElementType #f2f2f2 {
+		TEXT
+		LIST
+		CURRENCY
+	}
+
+	enum IinStatus #f2f2f2 {
+		SUPPORTED
+		UNSUPPORTED
+		UNKNOWN
+		NOT_ENOUGH_DIGITS	
+	}
+
+	enum MobileIntegrationLevel #f2f2f2 {
+		NO_SUPPORT
+		BASIC_SUPPORT
+		OPTIMIZED_SUPPORT
+	}
+
+	enum AccountOnFileAttributeStatus #f2f2f2 {
+		READ_ONLY
+		CAN_WRITE
+		MUST_WRITE
+	}
+
+}
+
+class Session {
+	+String apiBaseUrl
+	+String assetsBaseUrl
+    +Session(SessionDetails sessionDetails)	
+	+Promise<JSON> convertAmount(amount, source, target)
+	+Encryptor getEncryptor()
+	+Promise<IinDetailsResponse> getIinDetails(String partialCreditCardNumber, PaymentDetails paymentDetails)
+	+Promise<PaymentProduct> getPaymentProduct(String productId, PaymentDetails paymentDetails)
+	+Promise<PaymentProducts> getPaymentProducts(PaymentDetails paymentDetails)
+	+Promise<JSON> getPaymentProductDirectory(paymentProductId, currencyCode, countryCode)
+	+PaymentRequest getPaymentRequest()
+	+Promise<PublicKeyResponse> getPublicKey()
+}
+
+class C2SCommunicator {
+	+C2SCommunicator(C2SCommunicatorConfiguration C2SCommunicatorConfiguration, BasicPaymentProduct basicPaymentProduct)
+	+Promise<PaymentProducts> getPaymentProducts(C2SPaymentProductContext context)
+	+Promise<PaymentProduct> getPaymentProduct(String paymentProductId, C2SPaymentProductContext context)
+	+Promise<IinDetailsResponse> getPaymentProductIdByCreditCardNumber(String partialCreditCardNumber, C2SPaymentProductContext context)
+	+Promise<PublicKeyResponse> getPublicKey()
+	+Promise<JSON> convertAmount(amount, source, target)
+	+Promise<JSON> getPaymentProductDirectory(paymentProductId, currencyCode, countryCode)
+}
+
+class C2SCommunicatorConfiguration {
+	+String clientSessionId
+	+String consumerId 
+	+Region region
+	+Environment environment
+	+String apiBaseUrl
+	+String assetsBaseUrl
+	+C2SCommunicatorConfiguration(SessionDetails sessionDetails)
+}
+
+class C2SPaymentProductContext {
+	+Number totalAmount
+	+String countryCode
+	+String locale
+	+Boolean isRecurring
+	+String currency
+}
+
+class Encryptor {
+	+Encryptor(Promise<PublicKeyResponse> publicKeyResponsePromise)
+	+String encypt(PaymentRequest paymentRequest)
+}
+
+class JOSEEncryptor {
+	+String encypt(Object plainTextValues, PublicKeyResponse publicKeyResponse)
+}
+
+class PaymentRequest {
+    +PaymentRequest(String clientSessionId)
+	+Array<ValidationErrorMessage> getErrorMessageIds()
+	+String getValue(String paymentProductFieldId)
+	+Map<String, String> getValues()
+	+void setValue(String paymentProductFieldId, String value)
+	+MaskedString getMaskedValue(String paymentProductFieldId, String newValue, String oldValue)
+	+Map<String, String> getMaskedValues()
+	+Map<String, String> getUnmaskedValues()
+	+void setPaymentProduct(PaymentProduct paymentProduct)
+	+PaymentProduct getPaymentProduct()
+	+void setAccountOnFile(AccountOnFile accountOnFile)
+	+AccountOnFile getAccountOnFile()
+ 	+Boolean getTokenize()
+ 	+void setTokenize(Boolean tokenize)
+	+Boolean isValid()
+	+String getClientSessionID()
+}
+
+class MaskingUtil {
+	+MaskedString applyMask(String mask, String value, String oldValue)
+	+Number getMaxLengthBasedOnMask(String mask)
+	+String removeMask(String mask, String value)
+}
+
+class MaskedString {
+	+String formattedValue
+	+Number cursorIndex
+}
+
+class SessionDetails <<JS Literal>> {
+	+String clientSessionID
+	+String customerId
+	+Region region
+	+Environment environment
+}
+
+class PaymentDetails <<JS Literal>> {
+	+Number totalAmount
+	+String countryCode
+	+String locale
+	+Boolean isRecurring
+	+String currency
+}
+
+class Util {
+	+String getMetadata()
+	+String base64Encode(String|Object data)
+}
+
+enum Region {
+	EU
+	US
+}
+
+enum Environment {
+	PROD
+	PREPROD
+	SANDBOX
+}
+
+ValidationRule <|-- ValidationRuleLuhn
+ValidationRule <|-- ValidationRuleExpirationDate
+ValidationRule <|-- ValidationRuleRegularExpression
+ValidationRule <|-- ValidationRuleRange
+ValidationRule <|-- ValidationRuleLength
+ValidationRule <|-- ValidationRuleFixedList
+ValidationRule <|-- ValidationRuleEmailAddress
+C2SCommunicator "1" *-- "1" C2SCommunicatorConfiguration
+C2SCommunicator --> IinDetailsResponse
+C2SCommunicator --> PublicKeyResponse
+C2SCommunicator --> C2SPaymentProductContext
+C2SCommunicator --> Util
+Session "1" *-- "1" C2SCommunicator
+Session "1" o-right- "1" PaymentRequest
+Session "1" o-- "*" PaymentProduct
+Session "1" o-- "1" PaymentProducts
+Session "1" o-- "1" Encryptor
+Session --> PaymentDetails
+Session --> SessionDetails
+Encryptor --> JOSEEncryptor
+PaymentRequest o-- "1" PaymentProduct
+PaymentRequest o-- "1" AccountOnFile
+BasicPaymentProduct "1" *-- "*" AccountOnFile
+PaymentProduct "1" *-- "*" PaymentProductField
+BasicPaymentProduct <|-- PaymentProduct
+PaymentProductField "1" *-- "1" PaymentProductFieldDisplayHints
+PaymentProductFieldDisplayHints "1" *-- "1" Tooltip
+PaymentProductFieldDisplayHints "1" *-- "1" FormElement
+FormElement "1" *-- "*" ValueMappingElement
+BasicPaymentProduct "1" *-- "1" PaymentProductDisplayHints
+AccountOnFile "1" *-- "1" AccountOnFileDisplayHints
+AccountOnFileDisplayHints "1" *-- "*" LabelTemplateElement
+AccountOnFile "1" *-- "*" Attribute
+PaymentProductField "1" *-- "1" DataRestrictions
+PaymentProducts "1" *-- "*" BasicPaymentProduct
+PaymentProducts "1" *-- "*" AccountOnFile
+DataRestrictions "1" *-- "*" ValidationRule
+MaskingUtil --> MaskedString 
+DataRestrictions --> ValidationRuleFactory
+ValidationRuleFactory --> ValidationRule
+@enduml
