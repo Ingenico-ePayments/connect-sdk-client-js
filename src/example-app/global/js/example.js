@@ -442,10 +442,10 @@ $(function() {
 				$("#loading").hide();
 
 				// Now we have the encrypted string that you should send to your e-commerce server so your server
-				// can provide it to GlobalCollect in a secure server-2-server call.
+				// can provide it to the GlobalCollect platform in a secure server-2-server call.
 				// This example application simply displays the encrypted string on the screen.
 				$("body").addClass("end");
-				$("#main").html("<div class='alert alert-info'>EXAMPLE page</div><p>You can now send the encrypted data to GlobalCollect; please see the code in example.js</p>");
+				$("#main").html("<div class='alert alert-info'>EXAMPLE page</div><p>You can now send the encrypted data to the GlobalCollect platform; please see the code in example.js</p>");
 				setDebugMessage("paymentRequest has been encrypted to: " + encryptedString, 'example.js', 422, "INFO");
 
 			}, function(errors) {

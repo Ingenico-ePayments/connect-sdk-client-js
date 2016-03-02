@@ -1,0 +1,20 @@
+{
+  "name": "connect-sdk-client-js",
+  "description": "The JavaScript based client SDK that can be used for client to server communication between you and the GlobalCollect platform",
+  "main": "gulpfile.js",
+  "authors": [
+    "Ingenico ePayments"
+  ],
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "moduleType": [
+    "globals"
+  ],
+  "homepage": "https://github.com/Ingenico-ePayments/connect-sdk-client-js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

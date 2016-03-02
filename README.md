@@ -1,8 +1,8 @@
-# GlobalCollect JavaScript SDK
+# Ingenico Connect JavaScript SDK
 
 ## Introduction
 
-The JavaScript SDK helps you to communicate with the [GlobalCollect](http://www.globalcollect.com/) Client API. It's primary features are:
+The JavaScript SDK helps you to communicate with the [Ingenico Connect](http://www.globalcollect.com/) Client API. It's primary features are:
 
 * handling of all the details concerning the encryption of the payment details,
 * convenient JavaScript wrapper around the API calls and responses,
@@ -13,7 +13,7 @@ The JavaScript SDK helps you to communicate with the [GlobalCollect](http://www.
 
 Its use is demonstrated by an example application that is also included. This application constructs the user interface elements used throughout the payment process from API responses on the fly. 
 
-See the [GlobalCollect Developer Portal](https://developer.globalcollect.com/documentation/sdk/javascript/) for more information on how to use the API.
+See the [Ingenico ePayments Developer Hub](https://developer.globalcollect.com/documentation/sdk/javascript/) for more information on how to use the API.
 
 ## Structure of this repository
 

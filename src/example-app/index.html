@@ -12,15 +12,15 @@
         <script id="clientDetails">
             // To test this dem, please fill out the values below and run this application in a browser.
 
-            // Session and enviroment settings. These handle the GlobalCollect API settings and authentication.
+            // Session and enviroment settings. These handle the GlobalCollect platform API settings and authentication.
             var sessionDetails = {
                 clientSessionID : "xxx", // set clientSessionID from server
                 customerId : "xxx", // set customerId from server
-                region : "xxx", // the location of the GlobalCollect API server: EU or US
+                region : "xxx", // the location of the GlobalCollect platform API server: EU or US
                 environment : "xxx" // the type of GlobalCollet API: SANDBOX, PREPROD or PROD
             };
 
-            // Payment settings, these determine which payment products the GlobalCollect API will provide for this checkout.
+            // Payment settings, these determine which payment products the GlobalCollect platform API will provide for this checkout.
             var paymentDetails = {
                 totalAmount : 132, // in cents, e.g 20930 if the amount was 209,30
                 countryCode : "xxx", // see dropdown, e.g. NL
@@ -107,7 +107,7 @@
                             -->
                             <div class="demo">
                                 <p>
-                                    To process the payment using the services provided by GlobalCollect, the following information must be provided as a merchant
+                                    To process the payment using the services provided by the GlobalCollect platform, the following information must be provided as a merchant
                                 </p>
                                 <p>
                                     After providing the information requested below, this example can process a payment.
@@ -572,7 +572,7 @@
                                         <label for="locale" class="hidden-xs hidden-sm">Locale</label>
                                         <div>
                                             <select name="locale" id="locale" class="form-control">
-                                                <!-- These are not all possible locales. You can find them all in the GlobalCollect Configuration Center -->
+                                                <!-- These are not all possible locales. You can find them all in the Ingenico ePayments Configuration Center -->
                                                 <option value="ar_DZ">Arabic (ar_DZ)</option>
                                                 <option value="zh_TW">Chinese (zh_TW)</option>
                                                 <option value="da_DK">Danish (da_DK)</option>
@@ -665,7 +665,7 @@
             </div>
         </div>
 
-        <!-- The GlobalCollect SDK files -->
+        <!-- The Connect SDK files -->
         <!-- build:js global/js/gcsdk.min.js -->
         <script src="js-sdk/vendor/es5shim.js"></script>
         <script src="js-sdk/vendor/forge-0.6.34/js/util.js"></script>
@@ -734,7 +734,7 @@
         <script src="global/js/vendor/jquery.formatter.min.js"></script>
         <script src="global/js/jquery.gc.validate.defaults.js"></script>
 
-        <!-- The example application JavaScript file that uses the GlobalCollect SDK and the other JavaScript dependencies -->
+        <!-- The example application JavaScript file that uses the Connect and the other JavaScript dependencies -->
         <script src="global/js/example.js"></script>
 
         <script>
