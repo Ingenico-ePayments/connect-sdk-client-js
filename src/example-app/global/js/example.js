@@ -1,6 +1,6 @@
 /**
  *  This file contains the JavaScript code that the example application uses to build its screens.
- *  Besides the GlobalCollect JavaScript SDK a couple of other libraries are used (see the list below).
+ *  Besides the Connect JavaScript SDK a couple of other libraries are used (see the list below).
  *  The SDK itself only depends on the forge library for encryption purposes. It does not depend on any
  *  of the other libaries that were used in this example application. These other libraries were chosen
  *  for their low complexity. You are of course free to build your payment pages using any JavaScript
