@@ -1,6 +1,6 @@
 {
   "name": "connect-sdk-client-js",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "The JavaScript based client SDK that can be used for client to server communication between you and the GlobalCollect platform",
   "main": "gulpfile.js",
   "dependencies": {

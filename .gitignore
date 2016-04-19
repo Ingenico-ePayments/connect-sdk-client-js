@@ -3,3 +3,4 @@ dist
 /.project
 /npm-debug.log
 .vscode
+.idea
