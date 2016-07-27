@@ -1,4 +1,4 @@
-define("GCsdk.Session", ["GCsdk.core", "GCsdk.C2SCommunicator", "GCsdk.C2SCommunicatorConfiguration", "GCsdk.IinDetailsResponse", "GCsdk.promise", "GCsdk.C2SPaymentProductContext", "GCsdk.ValidationRule", "GCsdk.PaymentProducts", "GCsdk.PaymentProduct", "GCsdk.PaymentRequest", "GCsdk.Encryptor"], function(GCsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, ValidationRule, PaymentProducts, PaymentProduct, PaymentRequest, Encryptor) {
+define("GCsdk.Session", ["GCsdk.core", "GCsdk.C2SCommunicator", "GCsdk.C2SCommunicatorConfiguration", "GCsdk.IinDetailsResponse", "GCsdk.promise", "GCsdk.C2SPaymentProductContext", "GCsdk.PaymentProducts", "GCsdk.PaymentProduct", "GCsdk.PaymentRequest", "GCsdk.Encryptor"], function(GCsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, PaymentProducts, PaymentProduct, PaymentRequest, Encryptor) {
 
 	var session = function (sessionDetails, paymentProduct) {
 
