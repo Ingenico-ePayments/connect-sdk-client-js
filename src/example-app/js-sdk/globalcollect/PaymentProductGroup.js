@@ -1,4 +1,4 @@
-define("GCsdk.PaymentProduct", ["GCsdk.core", "GCsdk.BasicPaymentProduct", "GCsdk.PaymentProductField"], function(GCsdk, BasicPaymentProduct, PaymentProductField) {
+define("GCsdk.PaymentProductGroup", ["GCsdk.core", "GCsdk.BasicPaymentProduct", "GCsdk.PaymentProductField"], function(GCsdk, BasicPaymentProduct, PaymentProductField) {
 
 	var _parseJSON = function (_json, _paymentProductFields, _paymentProductFieldById) {
 		if (_json.fields) {
@@ -10,9 +10,10 @@ define("GCsdk.PaymentProduct", ["GCsdk.core", "GCsdk.BasicPaymentProduct", "GCsd
 		}
 	};
 
-	var PaymentProduct = function (json) {
+	var PaymentProductGroup = function (json) {
 		var basicPaymentProduct = new BasicPaymentProduct(json);
 		basicPaymentProduct.json = json;
+		basicPaymentProduct.json.type = "group";
 		basicPaymentProduct.paymentProductFields = [];
 		basicPaymentProduct.paymentProductFieldById = {};
 
@@ -21,6 +22,6 @@ define("GCsdk.PaymentProduct", ["GCsdk.core", "GCsdk.BasicPaymentProduct", "GCsd
 		return basicPaymentProduct;
 	};
 
-	GCsdk.PaymentProduct = PaymentProduct;
-	return PaymentProduct;
+	GCsdk.PaymentProductGroup = PaymentProductGroup;
+	return PaymentProductGroup;
 });

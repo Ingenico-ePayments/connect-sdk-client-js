@@ -44,12 +44,12 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 			return json;
 		};
 
-		var _extendLogoUrl = function(json, url) {
-			for (var i = 0, il = json.paymentProducts.length; i < il; i++) {
-				var product = json.paymentProducts[i];
+		var _extendLogoUrl = function(json, url, postfix) {
+			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
+				var product = json["paymentProduct" + postfix][i];
 				product.displayHints.logo = url + "/" + product.displayHints.logo;
 			}
-			json.paymentProducts.sort(function(a, b) {
+			json["paymentProduct" + postfix].sort(function(a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
 					return -1;
 				}
@@ -60,10 +60,10 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 
 		var metadata = _util.getMetadata();
 
-		this.getPaymentProducts = function(context) {
+		this.getBasicPaymentProducts = function(context) {
 			var promise = new Promise()
 				,cacheBust = new Date().getTime()
-				,cacheKey = "getPaymentProducts-"  + context.totalAmount + "_" + context.countryCode + "_" 
+				,cacheKey = "getPaymentProducts-"  + context.totalAmount + "_" + context.countryCode + "_"
 				    + context.locale + "_" + context.isRecurring + "_" + context.currency;
 
 			if (_cache[cacheKey]) {
@@ -71,15 +71,45 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId 
-				    + "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring 
-				    + "&amount=" + context.totalAmount + "&currencyCode=" + context.currency 
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				    + "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
+				    + "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
 				    + "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
 				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 				.end(function(res) {
 					if (res.success) {
-						var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl);
+						var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
+						_cache[cacheKey] = json;
+						promise.resolve(json);
+					} else {
+						promise.reject();
+					}
+				});
+			}
+			return promise;
+		};
+
+		this.getBasicPaymentProductGroups = function(context) {
+			var promise = new Promise()
+				,cacheBust = new Date().getTime()
+				,cacheKey = "getPaymentProductGroups-"  + context.totalAmount + "_" + context.countryCode + "_"
+				    + context.locale + "_" + context.isRecurring + "_" + context.currency;
+
+			if (_cache[cacheKey]) {
+				setTimeout(function() {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				    + "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
+				    + "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
+				    + "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
+				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+				.end(function(res) {
+					if (res.success) {
+						var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "Groups");
 						_cache[cacheKey] = json;
 						promise.resolve(json);
 					} else {
@@ -93,8 +123,8 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 		this.getPaymentProduct = function(paymentProductId, context) {
 			var promise = new Promise()
 				,cacheBust = new Date().getTime()
-				,cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_" 
-				    + context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_" 
+				,cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
+				    + context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
 				    + context.currency;
 			if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductId) {
 				if (_cache[cacheKey]) {
@@ -113,9 +143,51 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId 
-				    + "/products/" + paymentProductId + "?countryCode=" + context.countryCode 
-				    + "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount 
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				    + "/products/" + paymentProductId + "?countryCode=" + context.countryCode
+				    + "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
+				    + "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
+				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+				.end(function(res) {
+					if (res.success) {
+						var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+						_cache[cacheKey] = cleanedJSON;
+						promise.resolve(cleanedJSON);
+					} else {
+						promise.reject();
+					}
+				});
+			}
+			return promise;
+		};
+
+		this.getPaymentProductGroup = function(paymentProductGroupId, context) {
+			var promise = new Promise()
+				,cacheBust = new Date().getTime()
+				,cacheKey = "getPaymentProductGroup-" + paymentProductGroupId + "_" + context.totalAmount + "_"
+				    + context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
+				    + context.currency;
+			if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductGroupId) {
+				if (_cache[cacheKey]) {
+					setTimeout(function() {
+						promise.resolve(_cache[cacheKey]);
+					}, 0);
+				} else {
+					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
+					_cache[cacheKey] = json;
+					setTimeout(function() {
+						promise.resolve(_cache[cacheKey]);
+					}, 0);
+				}
+			} else if (_cache[cacheKey]) {
+				setTimeout(function() {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				    + "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
+				    + "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 				    + "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
 				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
@@ -152,7 +224,7 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 				};
 				if (isEnoughDigits(partialCreditCardNumber)) {
 					Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
-					.data("{\"bin\": \"" + partialCreditCardNumber + "\"}")
+					.data(JSON.stringify(this.convertContextToIinDetailsContext(partialCreditCardNumber, this.context)))
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function(res) {
@@ -160,19 +232,32 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 							iinDetailsResponse.json = res.responseJSON;
 							iinDetailsResponse.countryCode = res.responseJSON.countryCode;
 							iinDetailsResponse.paymentProductId = res.responseJSON.paymentProductId;
+							iinDetailsResponse.isAllowedInContext = res.responseJSON.isAllowedInContext;
+							iinDetailsResponse.coBrands = res.responseJSON.coBrands;
 							// check if this card is supported
-							that.getPaymentProduct(iinDetailsResponse.paymentProductId, that.context).then(function(paymentProduct) {
-								if (paymentProduct) {
-									iinDetailsResponse.status = "SUPPORTED";
-								} else {
-									iinDetailsResponse.status = "UNSUPPORTED";
+							// if isAllowedInContext is available in the response set status and resolve
+							if(res.responseJSON.hasOwnProperty('isAllowedInContext')){
+								iinDetailsResponse.status = "SUPPORTED";
+								if (iinDetailsResponse.isAllowedInContext === false) {
+									iinDetailsResponse.status = "EXISTING_BUT_NOT_ALLOWED";
 								}
 								_cache[cacheKey] = iinDetailsResponse;
 								promise.resolve(iinDetailsResponse);
-							}, function() {
-								iinDetailsResponse.status = "UNKNOWN";
-								promise.reject(iinDetailsResponse);
-							});
+							} else {
+								//if isAllowedInContext is not available get the payment product again to determine status and resolve
+								that.getPaymentProduct(iinDetailsResponse.paymentProductId, that.context).then(function (paymentProduct) {
+									if (paymentProduct) {
+										iinDetailsResponse.status = "SUPPORTED";
+									} else {
+										iinDetailsResponse.status = "UNSUPPORTED";
+									}
+									_cache[cacheKey] = iinDetailsResponse;
+									promise.resolve(iinDetailsResponse);
+								}, function () {
+									iinDetailsResponse.status = "UNKNOWN";
+									promise.reject(iinDetailsResponse);
+								});
+							}
 						} else {
 							iinDetailsResponse.status = "UNKNOWN";
 							promise.reject(iinDetailsResponse);
@@ -186,6 +271,20 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 				}
 			}
 			return promise;
+		};
+
+		this.convertContextToIinDetailsContext = function (partialCreditCardNumber, context) {
+			return {
+				"bin": partialCreditCardNumber,
+				"paymentContext": {
+					"countryCode": context.countryCode,
+					"isRecurring": context.isRecurring,
+					"amountOfMoney": {
+						"amount": context.totalAmount,
+						"currencyCode": context.currency
+					}
+				}
+			}
 		};
 
 		this.getPublicKey = function() {
@@ -216,7 +315,7 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 		this.getPaymentProductDirectory = function(paymentProductId, currencyCode, countryCode) {
 			var promise = new Promise()
 			 ,cacheKey = "getPaymentProductDirectory-" + paymentProductId + "_" + currencyCode + "_" + countryCode;
-                
+
 			if (_cache[cacheKey]) {
 				setTimeout(function() {
 					promise.resolve(_cache[cacheKey]);
@@ -240,7 +339,7 @@ define("GCsdk.C2SCommunicator", ["GCsdk.core", "GCsdk.promise", "GCsdk.net", "GC
 		this.convertAmount = function(amount, source, target) {
 			var promise = new Promise()
 			 ,cacheKey = "convertAmount-" + amount + "_" + source + "_" + target;
-                
+
 			if (_cache[cacheKey]) {
 				setTimeout(function() {
 					promise.resolve(_cache[cacheKey]);

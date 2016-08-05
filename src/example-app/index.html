@@ -14,19 +14,19 @@
 
             // Session and enviroment settings. These handle the GlobalCollect platform API settings and authentication.
             var sessionDetails = {
-                clientSessionID : "xxx", // set clientSessionID from server
-                customerId : "xxx", // set customerId from server
-                region : "xxx", // the location of the GlobalCollect platform API server: EU or US
-                environment : "xxx" // the type of GlobalCollet API: SANDBOX, PREPROD or PROD
+                clientSessionID : "", // set clientSessionID from server
+                customerId : "", // set customerId from server
+                region : "EU", // the location of the GlobalCollect platform API server: EU or US
+                environment : "SANDBOX" // the type of GlobalCollet API: SANDBOX, PREPROD or PROD
             };
 
             // Payment settings, these determine which payment products the GlobalCollect platform API will provide for this checkout.
             var paymentDetails = {
-                totalAmount : 132, // in cents, e.g 20930 if the amount was 209,30
-                countryCode : "xxx", // see dropdown, e.g. NL
-                locale : "xxx", // as specified in the config center, e.g. nl_NL
+                totalAmount : 2345, // in cents, e.g 20930 if the amount was 209,30
+                countryCode : "NL", // see dropdown, e.g. NL
+                locale : "nl_NL", // as specified in the config center, e.g. nl_NL
                 isRecurring : false, // set if recurring: true or false
-                currency : "xxx" // set currency, see dropdown, e.g. EUR
+                currency : "EUR" // set currency, see dropdown, e.g. EUR
             };
         </script>
         <!--[if lt IE 9]>
@@ -699,6 +699,7 @@
         <script src="js-sdk/globalcollect/AccountOnFile.js"></script>
         <script src="js-sdk/globalcollect/PaymentProductDisplayHints.js"></script>
         <script src="js-sdk/globalcollect/BasicPaymentProduct.js"></script>
+        <script src="js-sdk/globalcollect/BasicPaymentProductGroup.js"></script>
         <script src="js-sdk/globalcollect/MaskedString.js"></script>
         <script src="js-sdk/globalcollect/MaskingUtil.js"></script>
         <script src="js-sdk/globalcollect/ValidationRuleLuhn.js"></script>
@@ -716,7 +717,10 @@
         <script src="js-sdk/globalcollect/PaymentProductFieldDisplayHints.js"></script>
         <script src="js-sdk/globalcollect/PaymentProductField.js"></script>
         <script src="js-sdk/globalcollect/PaymentProduct.js"></script>
-        <script src="js-sdk/globalcollect/PaymentProducts.js"></script>
+        <script src="js-sdk/globalcollect/PaymentProductGroup.js"></script>
+        <script src="js-sdk/globalcollect/BasicPaymentProducts.js"></script>
+        <script src="js-sdk/globalcollect/BasicPaymentProductGroups.js"></script>
+        <script src="js-sdk/globalcollect/BasicPaymentItems.js"></script>
         <script src="js-sdk/globalcollect/PaymentRequest.js"></script>
         <script src="js-sdk/globalcollect/C2SPaymentProductContext.js"></script>
         <script src="js-sdk/globalcollect/JOSEEncryptor.js"></script>
@@ -734,8 +738,9 @@
         <script src="global/js/vendor/jquery.formatter.min.js"></script>
         <script src="global/js/jquery.gc.validate.defaults.js"></script>
 
-        <!-- The example application JavaScript file that uses the Connect and the other JavaScript dependencies -->
-        <script src="global/js/example.js"></script>
+        <!-- The example application JavaScript files that uses the Connect and the other JavaScript dependencies -->
+        <script src="global/js/example-helpers.js"></script>
+        <script src="global/js/example-app.js"></script>
 
         <script>
             // bootstrap the page
@@ -766,8 +771,8 @@
                     <p class="par">Other Payment products:</p>
                 {{/if}}
                 <ul id="paymentoptionslist">
-                    {{#each paymentProducts}}
-                        <li><a data-payment-method="{{id}}" class="btn-tertiary" href="#{{id}}"><img src="{{displayHints.logo}}?size=25x17">{{displayHints.label}}</a></li>
+                    {{#each paymentItems}}
+                        <li><a data-payment-method="{{id}}" data-payment-type="{{type}}" class="btn-tertiary" href="#{{id}}"><img src="{{displayHints.logo}}?size=25x17">{{displayHints.label}}</a></li>
                     {{/each}}
                 </ul>
             </div>
@@ -776,61 +781,66 @@
         <script id="detail-template" type="text/x-handlebars-template">
             <div class="paymentoption par">
                 <form class="validatedForm">
-                    {{#each fields}}
-                        <div class="form-group">
-                            <label for="{{id}}" class="hidden-xs hidden-sm">{{displayHints.label}}</label>
-                        <div>
-                        {{#if displayHints.formElement.list}}
-                            <select name="{{id}}" id="{{id}}" class="form-control" required data-includeInEncryptedBlob="true">
-                                {{#each displayHints.formElement.valueMapping }}
-                                    <option value="{{value}}">{{displayName}}</option>
-                                {{/each}}
-                            </select>
-                        {{else}}
-                            {{#if displayHints.formElement.isCurrency}}{{paymentContext.currency}}
-                                <input name="{{id}}-baseCurrencyUnit" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}-baseCurrencyUnit" class="form-control euro" data-includeInEncryptedBlob="true"
-                                    {{#each validators}}
-                                        data-rule-{{this}}="true"
+                    <div class="fields-holder">
+                        {{#each fields}}
+                            <div class="form-group" data-wrapper="{{id}}">
+                                <label for="{{id}}" class="hidden-xs hidden-sm">{{displayHints.label}}</label>
+                            <div>
+                            {{#if displayHints.formElement.list}}
+                                <select name="{{id}}" id="{{id}}" class="form-control" required data-includeInEncryptedBlob="true">
+                                    {{#each displayHints.formElement.valueMapping }}
+                                        <option value="{{value}}">{{displayName}}</option>
                                     {{/each}}
-                                    {{#if dataRestrictions.isRequired}}
-                                        required
-                                    {{/if}}
-                                >.
-                                <input name="{{id}}-centecimalCurrencyUnit" type="{{type}}" id="{{id}}-centecimalCurrencyUnit" class="form-control cent" data-includeInEncryptedBlob="true" min="0" max="99"
-                                    {{#each validators}}
-                                        data-rule-{{this}}="true"
-                                    {{/each}}
-                                    {{#if dataRestrictions.isRequired}}
-                                        required
-                                    {{/if}}
-                                >
+                                </select>
                             {{else}}
-                                <input name="{{id}}" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}" class="form-control" data-includeInEncryptedBlob="true"
-                                    {{#each validators}}
-                                        data-rule-{{this}}="true"
-                                    {{/each}}
-                                    {{#if dataRestrictions.isRequired}}
-                                        required
-                                    {{/if}}
-                                >
+                                {{#if displayHints.formElement.isCurrency}}{{paymentContext.currency}}
+                                    <input name="{{id}}-baseCurrencyUnit" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}-baseCurrencyUnit" class="form-control euro" data-includeInEncryptedBlob="true"
+                                        {{#each validators}}
+                                            data-rule-{{this}}="true"
+                                        {{/each}}
+                                        {{#if dataRestrictions.isRequired}}
+                                            required
+                                        {{/if}}
+                                    >.
+                                    <input name="{{id}}-centecimalCurrencyUnit" type="{{type}}" id="{{id}}-centecimalCurrencyUnit" class="form-control cent" data-includeInEncryptedBlob="true" min="0" max="99"
+                                        {{#each validators}}
+                                            data-rule-{{this}}="true"
+                                        {{/each}}
+                                        {{#if dataRestrictions.isRequired}}
+                                            required
+                                        {{/if}}
+                                    >
+                                {{else}}
+                                    <input name="{{id}}" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}" class="form-control" data-includeInEncryptedBlob="true"
+                                        {{#each validators}}
+                                            data-rule-{{this}}="true"
+                                        {{/each}}
+                                        {{#if dataRestrictions.isRequired}}
+                                            required
+                                        {{/if}}
+                                    >
+                                {{/if}}
                             {{/if}}
-                        {{/if}}
-                        {{#if displayHints.tooltip}}
-                            <span data-content="{{displayHints.tooltip.label}}<br /><img src='{{displayHints.tooltip.image}}?size=210x140' width='210' height='140'>" class="info-popover" title="" data-html="true" data-placement="left" id="{{id}}-popover">
-                                ?
-                            </span>
-                        {{/if}}
-                        </div>
-                        </div>
-                    {{/each}}
-                    {{#if showRememberMe}}
+                            {{#if displayHints.tooltip}}
+                                <span data-content="{{displayHints.tooltip.label}}<br /><img src='{{displayHints.tooltip.image}}?size=210x140' width='210' height='140'>" class="info-popover" title="" data-html="true" data-placement="left" id="{{id}}-popover">
+                                    ?
+                                </span>
+                            {{/if}}
+                            {{#if isCardNumberField}}
+                                <div id="cobrandsHolder"></div>
+                            {{/if}}
+                            </div>
+                            </div>
+                        {{/each}}
+                    </div>
+
                         <div class="checkbox">
                             <label>
                                 <input name="remember" type="checkbox" id="rememberme">
                                 <span>Remember my details for future purchases</span>
                             </label>
                         </div>
-                    {{/if}}
+
                     <div class="paymentbuttons" id="paymentButtons">
                         <button class="btn btn-success btn-block btn-primary" type="submit" id="primaryButton">
                             <span>Pay now</span>
@@ -845,7 +855,7 @@
             <div class="paymentoption par">
                 <form class="validatedForm">
                     {{#each fields}}
-                        <div class="form-group">
+                        <div class="form-group" data-wrapper="{{id}}">
                             <label for="{{id}}" class="hidden-xs hidden-sm">{{displayHints.label}}</label>
                             <div>
                                 {{#if displayHints.formElement.list}}
@@ -912,6 +922,86 @@
                         </a>
                     </div>
                 </form>
+            </div>
+        </script>
+        <script id="productfield-template" type="text/x-handlebars-template">
+            <div class="form-group" data-wrapper="{{id}}">
+                <label for="{{id}}" class="hidden-xs hidden-sm">{{displayHints.label}}</label>
+                <div>
+                    {{#if displayHints.formElement.list}}
+                        <select name="{{id}}" id="{{id}}" class="form-control" required data-includeInEncryptedBlob="{{ includeInEncryptedBlob }}">
+                            {{#each displayHints.formElement.valueMapping}}
+                                <option value="{{value}}">{{displayName}}</option>
+                            {{/each}}
+                        </select>
+                    {{else}}
+                        {{#if displayHints.formElement.isCurrency}}{{../paymentContext.currency}}
+                            <input name="{{id}}-baseCurrencyUnit" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}-baseCurrencyUnit" class="form-control" data-includeInEncryptedBlob="{{ includeInEncryptedBlob }}"
+                                {{#each validators}}
+                                    data-rule-{{this}}="true"
+                                {{/each}}
+                                {{#if dataRestrictions.isRequired}}
+                                    required
+                                {{/if}}
+                                {{#if isReadOnly}}
+                                        disabled="disabled"
+                                {{/if}}
+                            >.
+                            <input name="{{id}}-centecimalCurrencyUnit" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}-centecimalCurrencyUnit" class="form-control" data-includeInEncryptedBlob="{{ includeInEncryptedBlob }}" min="0" max="99"
+                                {{#each validators}}
+                                    data-rule-{{this}}="true"
+                                {{/each}}
+                                {{#if dataRestrictions.isRequired}}
+                                    required
+                                {{/if}}
+                                {{#if isReadOnly}}
+                                        disabled="disabled"
+                                {{/if}}
+                            >
+                        {{else}}
+                            <input name="{{id}}" type="{{type}}" placeholder="{{displayHints.placeholderLabel}}" id="{{id}}" class="form-control" data-includeInEncryptedBlob="{{ includeInEncryptedBlob }}"
+                            {{#each validators}}
+                                data-rule-{{this}}="true"
+                            {{/each}}
+                            {{#if knownValue}}
+                                value="{{knownValue}}"
+                            {{/if}}
+                            {{#if isReadOnly}}
+                                    disabled="disabled"
+                            {{/if}}
+                            {{#if dataRestrictions.isRequired}}
+                                required
+                            {{/if}}
+                            >
+                        {{/if}}
+                    {{/if}}
+                    {{#if displayHints.tooltip}}
+                        <span data-content="{{displayHints.tooltip.label}}<br /><img src='{{displayHints.tooltip.image}}?size=210x140' width='210' height='140'>" class="info-popover" title="" data-html="true" data-placement="left" id="{{id}}-popover">
+                            ?
+                        </span>
+                    {{/if}}
+                </div>
+            </div>
+        </script>
+        <script id="cobrands-template" type="text/x-handlebars-template">
+            <div id="cobrand">
+                <a class="toggle-cobrand" href="#">Multiple brands detected</a>
+                <div class="cobrand-wrapper">
+                    <div class="row">
+                        <div class="col-xs-20">
+                            <h3>Multiple brands detected</h3>
+                            <p>Please select your derired brand</p>
+                        </div>
+                        <div class="col-xs-4">
+                            <a class="cobrand-close pull-right" href="#"></a>
+                        </div>
+                    </div>
+                    <ul id="paymentoptionslist">
+                        {{#each coBrands}}
+                            <li><a data-payment-method="{{id}}" data-payment-type="product" class="btn-tertiary" href="#{{id}}"><img src="{{displayHints.logo}}?size=25x17">{{displayHints.label}}</a></li>
+                        {{/each}}
+                    </ul>
+                </div>
             </div>
         </script>
     </body>

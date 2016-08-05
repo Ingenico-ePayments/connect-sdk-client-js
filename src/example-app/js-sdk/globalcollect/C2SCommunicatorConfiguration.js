@@ -57,12 +57,12 @@ define("GCsdk.C2SCommunicatorConfiguration", ["GCsdk.core"], function(GCsdk) {
                             }
                             ,DEV_ISC: {
                                 EU: {
-                                    API: "http://gc-ci-dev.isaac.local:7003/client/v1"
-                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                                    API: "http://api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
                                 }
                                 ,US: {
-                                    API: "http://gc-ci-dev.isaac.local:7003/client/v1"
-                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                                    API: "http://api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
                                 }
                             }
                         };

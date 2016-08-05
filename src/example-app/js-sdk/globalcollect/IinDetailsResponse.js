@@ -4,6 +4,8 @@ define("GCsdk.IinDetailsResponse", ["GCsdk.core", "GCsdk.promise"], function(GCs
 		this.status = '';
 		this.countryCode = '';
 		this.paymentProductId = '';
+		this.isAllowedInContext = '';
+		this.coBrands = [];
 	};
 	GCsdk.IinDetailsResponse = IinDetailsResponse;
 	return IinDetailsResponse;

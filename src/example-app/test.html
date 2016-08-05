@@ -1,0 +1,142 @@
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+<script src="js-sdk/vendor/es5shim.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/util.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/cipher.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/cipherModes.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/aes.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/oids.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/asn1.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/sha1.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/sha256.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/sha512.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/md.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/hmac.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/prng.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/random.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/jsbn.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/pkcs1.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/rsa.js"></script>
+<script src="js-sdk/vendor/forge-0.6.34/js/forge.js"></script>
+<script src="js-sdk/globalcollect/core.js"></script>
+<script src="js-sdk/globalcollect/promise.js"></script>
+<script src="js-sdk/globalcollect/net.js"></script>
+<script src="js-sdk/globalcollect/util.js"></script>
+<script src="js-sdk/globalcollect/PublicKeyResponse.js"></script>
+<script src="js-sdk/globalcollect/C2SCommunicatorConfiguration.js"></script>
+<script src="js-sdk/globalcollect/IinDetailsResponse.js"></script>
+<script src="js-sdk/globalcollect/C2SCommunicator.js"></script>
+<script src="js-sdk/globalcollect/LabelTemplateElement.js"></script>
+<script src="js-sdk/globalcollect/Attribute.js"></script>
+<script src="js-sdk/globalcollect/AccountOnFileDisplayHints.js"></script>
+<script src="js-sdk/globalcollect/AccountOnFile.js"></script>
+<script src="js-sdk/globalcollect/PaymentProductDisplayHints.js"></script>
+<script src="js-sdk/globalcollect/BasicPaymentProduct.js"></script>
+<script src="js-sdk/globalcollect/MaskedString.js"></script>
+<script src="js-sdk/globalcollect/MaskingUtil.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleLuhn.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleExpirationDate.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleFixedList.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleLength.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleRange.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleRegularExpression.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleEmailAddress.js"></script>
+<script src="js-sdk/globalcollect/ValidationRuleFactory.js"></script>
+<script src="js-sdk/globalcollect/ValueMappingElement.js"></script>
+<script src="js-sdk/globalcollect/DataRestrictions.js"></script>
+<script src="js-sdk/globalcollect/FormElement.js"></script>
+<script src="js-sdk/globalcollect/Tooltip.js"></script>
+<script src="js-sdk/globalcollect/PaymentProductFieldDisplayHints.js"></script>
+<script src="js-sdk/globalcollect/PaymentProductField.js"></script>
+<script src="js-sdk/globalcollect/PaymentProduct.js"></script>
+<script src="js-sdk/globalcollect/PaymentProducts.js"></script>
+<script src="js-sdk/globalcollect/PaymentRequest.js"></script>
+<script src="js-sdk/globalcollect/C2SPaymentProductContext.js"></script>
+<script src="js-sdk/globalcollect/JOSEEncryptor.js"></script>
+<script src="js-sdk/globalcollect/Encryptor.js"></script>
+<script src="js-sdk/globalcollect/session.js"></script>
+
+
+
+<script>
+  $(document).ready(function () {
+
+        var sessionDetails = {
+            clientSessionID: "Admin_42a4d2dbc3de4cd68bfccc68e61e6ab0",
+            customerId: "9991-52efceba737a429ca94377c7f5dd853b",
+            region: "EU",
+            environment: "DEV_ISC"
+        };
+
+        var paymentDetails = {
+            totalAmount: 10000,
+            countryCode: "NL",
+            locale: "NL_nl",
+            currency: "EUR",
+            isRecurring: false
+        };
+
+        var session = new GCsdk.Session(sessionDetails);
+        var cardNumber = '5017 6711 1111 1111';
+        // Get payment products from API
+        session.getPaymentProducts(paymentDetails).then(function(paymentProducts) {
+          session.getIinDetails(cardNumber, paymentDetails).then(function (iinDetailsResponse) {
+
+                if (iinDetailsResponse.status !== "SUPPORTED") {
+
+                    // Card number is not a valid payment method
+                    alert("Card check error: " + iinDetailsResponse.status);
+
+                    return;
+                }
+
+                session.getPaymentProduct(iinDetailsResponse.paymentProductId, paymentDetails).then(function (paymentProduct) {
+
+                    var paymentRequest = session.getPaymentRequest();
+
+                    paymentRequest.setPaymentProduct(paymentProduct);
+                    paymentRequest.setValue("cardNumber", cardNumber);
+                    paymentRequest.setValue("cvv", "123");
+                    paymentRequest.setValue("expiryDate", "01/17");
+
+                    alert(paymentRequest.isValid());
+                    //alert(JSON.stringify(paymentRequest));
+
+                    if (!paymentRequest.isValid()) {
+
+                        alert("paymentRequest is invalid");
+
+                        for (var error in paymentRequest.getErrorMessageIds()) {
+
+                            alert(error);
+                        }
+                    }
+
+                    session.getEncryptor().encrypt(paymentRequest).then(function (paymentHash) {
+
+                        //alert("Encrypted ok, payment method is type " + paymentProduct.displayHints.label);
+
+                        $("#PaymentProductId").val(iinDetailsResponse.paymentProductId);
+                        $("#PaymentHash").val(paymentHash);
+                        $("body").text(paymentHash);
+
+                    }, function (errors) {
+
+                        //alert("Failed to encrypt due to " + JSON.stringify(errors));
+                    });
+
+                }, function () {
+
+                    //alert("API request failed.");
+                });
+
+            }, function () {
+
+                //alert("API request failed.");
+            });
+        }, function() {
+            //alert("API request failed.");
+        });
+    });
+
+</script>

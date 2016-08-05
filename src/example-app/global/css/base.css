@@ -4680,3 +4680,45 @@ body[dir=rtl] .pull-left {
     margin: 0 auto;
   }
 }
+
+#cobrand {
+  display: none;
+  overflow: hidden;
+}
+#cobrand .toggle-cobrand {
+  float: right;
+  text-decoration: underline;
+  font-size: 0.8em;
+  margin-top: 5px;
+  margin-bottom: 2px;
+}
+#cobrand .cobrand-close {
+  text-decoration: none;
+  background: url(img/icons/icon-close.png) no-repeat 0 0;
+  width: 18px;
+  height: 18px;
+  border: 1px solid transparent;
+}
+#cobrand .cobrand-close:hover {
+  text-decoration: none;
+  border: 1px solid #cccccc;
+}
+#cobrand .cobrand-wrapper {
+  margin-top: 5px;
+  padding: 10px;
+  background-color: #f2f2f2;
+  border: 1px solid #cccccc;
+  display: none;
+}
+#cobrand .cobrand-wrapper h2 {
+  margin: 0 0 8px;
+}
+#cobrand .cobrand-wrapper h3 {
+  margin: 0 0 5px;
+}
+#cobrand .cobrand-wrapper p {
+  margin: 0 0 5px 0;
+}
+#cobrand .cobrand-wrapper ul {
+  margin: 0;
+}

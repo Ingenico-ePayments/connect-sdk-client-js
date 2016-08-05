@@ -1,24 +1,61 @@
-define("GCsdk.Session", ["GCsdk.core", "GCsdk.C2SCommunicator", "GCsdk.C2SCommunicatorConfiguration", "GCsdk.IinDetailsResponse", "GCsdk.promise", "GCsdk.C2SPaymentProductContext", "GCsdk.ValidationRule", "GCsdk.PaymentProducts", "GCsdk.PaymentProduct", "GCsdk.PaymentRequest", "GCsdk.Encryptor"], function(GCsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, ValidationRule, PaymentProducts, PaymentProduct, PaymentRequest, Encryptor) {
+define("GCsdk.Session", ["GCsdk.core", "GCsdk.C2SCommunicator", "GCsdk.C2SCommunicatorConfiguration", "GCsdk.IinDetailsResponse", "GCsdk.promise", "GCsdk.C2SPaymentProductContext", "GCsdk.ValidationRule", "GCsdk.BasicPaymentProducts", "GCsdk.BasicPaymentProductGroups", "GCsdk.PaymentProduct", "GCsdk.PaymentProductGroup", "GCsdk.BasicPaymentItems", "GCsdk.PaymentRequest", "GCsdk.Encryptor"], function(GCsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, ValidationRule, BasicPaymentProducts, BasicPaymentProductGroups, PaymentProduct, PaymentProductGroup, BasicPaymentItems, PaymentRequest, Encryptor) {
 
 	var session = function (sessionDetails, paymentProduct) {
 
 		var _c2SCommunicatorConfiguration = new C2SCommunicatorConfiguration(sessionDetails)
 			,_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct)
-			,_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest;
-
+			,_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup, _session = this;
 		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
 		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
 
-		this.getPaymentProducts = function(paymentRequestPayload) {
+		this.getBasicPaymentProducts = function(paymentRequestPayload) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
-			_c2sCommunicator.getPaymentProducts(c2SPaymentProductContext).then(function (json) {
+			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext).then(function (json) {
 				_paymentRequestPayload = paymentRequestPayload;
-				var paymentProducts = new PaymentProducts(json);
+				var paymentProducts = new BasicPaymentProducts(json);
 				promise.resolve(paymentProducts);
 			}, function () {
 				promise.reject();
 			});
+			return promise;
+		};
+
+		this.getBasicPaymentProductGroups = function(paymentRequestPayload) {
+			var promise = new Promise();
+			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
+			_c2sCommunicator.getBasicPaymentProductGroups(c2SPaymentProductContext).then(function (json) {
+				_paymentRequestPayload = paymentRequestPayload;
+				var paymentProductGroups = new BasicPaymentProductGroups(json);
+				promise.resolve(paymentProductGroups);
+			}, function () {
+				promise.reject();
+			});
+			return promise;
+		};
+
+		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups) {
+			var promise = new Promise();
+			// get products & groups
+			if (useGroups) {
+				_session.getBasicPaymentProducts(paymentRequestPayload).then(function (products) {
+					_session.getBasicPaymentProductGroups(paymentRequestPayload).then(function (groups) {
+						var basicPaymentItems = new BasicPaymentItems(products, groups);
+						promise.resolve(basicPaymentItems);
+					}, function () {
+						promise.reject();
+					});
+				}, function () {
+					promise.reject();
+				});
+			} else {
+				_session.getBasicPaymentProducts(paymentRequestPayload).then(function (products) {
+					var basicPaymentItems = new BasicPaymentItems(products, null);
+					promise.resolve(basicPaymentItems);
+				}, function () {
+					promise.reject();
+				});
+			}
 			return promise;
 		};
 
@@ -31,6 +68,20 @@ define("GCsdk.Session", ["GCsdk.core", "GCsdk.C2SCommunicator", "GCsdk.C2SCommun
 				promise.resolve(_paymentProduct);
 			}, function () {
 				_paymentProduct = null;
+				promise.reject();
+			});
+			return promise;
+		};
+
+		this.getPaymentProductGroup = function(paymentProductGroupId, paymentRequestPayload) {
+			var promise = new Promise();
+			_paymentProductGroupId = paymentProductGroupId;
+			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
+			_c2sCommunicator.getPaymentProductGroup(paymentProductGroupId, c2SPaymentProductContext).then(function (response) {
+				_paymentProductGroup = new PaymentProductGroup(response);
+				promise.resolve(_paymentProductGroup);
+			}, function () {
+				_paymentProductGroup = null;
 				promise.reject();
 			});
 			return promise;

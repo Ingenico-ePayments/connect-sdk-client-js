@@ -1,11 +1,11 @@
 var gulp = require('gulp')
 	,concat = require('gulp-concat')
 	,uglify = require('gulp-uglify')
-	,minifyCss = require('gulp-minify-css')
 	,usemin = require('gulp-usemin')
-	,clean = require('gulp-clean')
+	,rimraf = require('gulp-rimraf')
 	,stripDebug = require('gulp-strip-debug')
 	,sourcemaps = require('gulp-sourcemaps')
+  ,plumber = require('gulp-plumber')
 
     ,fullSdkSrc = [
 		"src/example-app/js-sdk/vendor/es5shim.js",
@@ -44,6 +44,7 @@ var gulp = require('gulp')
 		"src/example-app/js-sdk/globalcollect/AccountOnFile.js",
 		"src/example-app/js-sdk/globalcollect/PaymentProductDisplayHints.js",
 		"src/example-app/js-sdk/globalcollect/BasicPaymentProduct.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroup.js",
 		"src/example-app/js-sdk/globalcollect/MaskedString.js",
 		"src/example-app/js-sdk/globalcollect/MaskingUtil.js",
 		"src/example-app/js-sdk/globalcollect/ValidationRuleLuhn.js",
@@ -61,14 +62,17 @@ var gulp = require('gulp')
 		"src/example-app/js-sdk/globalcollect/PaymentProductFieldDisplayHints.js",
 		"src/example-app/js-sdk/globalcollect/PaymentProductField.js",
 		"src/example-app/js-sdk/globalcollect/PaymentProduct.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProducts.js",
+		"src/example-app/js-sdk/globalcollect/PaymentProductGroup.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentProducts.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroups.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentItems.js",
 		"src/example-app/js-sdk/globalcollect/PaymentRequest.js",
 		"src/example-app/js-sdk/globalcollect/C2SPaymentProductContext.js",
 		"src/example-app/js-sdk/globalcollect/JOSEEncryptor.js",
 		"src/example-app/js-sdk/globalcollect/Encryptor.js",
 		"src/example-app/js-sdk/globalcollect/session.js"
 	]
-	
+
     ,sdkSrcNoEncryption = [
 		"src/example-app/js-sdk/vendor/es5shim.js",
 		"src/example-app/js-sdk/globalcollect/core.js",
@@ -85,6 +89,7 @@ var gulp = require('gulp')
 		"src/example-app/js-sdk/globalcollect/AccountOnFile.js",
 		"src/example-app/js-sdk/globalcollect/PaymentProductDisplayHints.js",
 		"src/example-app/js-sdk/globalcollect/BasicPaymentProduct.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroup.js",
 		"src/example-app/js-sdk/globalcollect/MaskedString.js",
 		"src/example-app/js-sdk/globalcollect/MaskingUtil.js",
 		"src/example-app/js-sdk/globalcollect/ValidationRuleLuhn.js",
@@ -102,12 +107,14 @@ var gulp = require('gulp')
 		"src/example-app/js-sdk/globalcollect/PaymentProductFieldDisplayHints.js",
 		"src/example-app/js-sdk/globalcollect/PaymentProductField.js",
 		"src/example-app/js-sdk/globalcollect/PaymentProduct.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProducts.js",
+		"src/example-app/js-sdk/globalcollect/PaymentProductGroup.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentProducts.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroups.js",
+		"src/example-app/js-sdk/globalcollect/BasicPaymentItems.js",
 		"src/example-app/js-sdk/globalcollect/PaymentRequest.js",
 		"src/example-app/js-sdk/globalcollect/C2SPaymentProductContext.js",
 		"src/example-app/js-sdk/globalcollect/session.js"
 	];
-
 
 gulp.task('createFullSdk', function() {
   gulp.src(fullSdkSrc)
@@ -132,10 +139,10 @@ gulp.task('createSdkNoEncryption', function() {
 		.pipe(sourcemaps.write('.'))
         .pipe(gulp.dest('./dist/'));
 });
-            
+
 gulp.task('createApplication', function () {
-    
-	// exaple app. The SDK is compilen from the references in the html file. 
+
+	// exaple app. The SDK is compilen from the references in the html file.
 	gulp.src('./src/example-app/global/**/*').pipe(gulp.dest('./dist/example-app/global/'));
 	gulp.src('./src/example-app/*.html')
     	.pipe(usemin({
@@ -143,13 +150,12 @@ gulp.task('createApplication', function () {
       		js: [sourcemaps.init(), uglify(), sourcemaps.write('.')]
     	}))
         .pipe(gulp.dest('./dist/example-app/'));
-    
+
 });
 
 // clean folder
-gulp.task('clean', function () {
-	return gulp.src('./dist/**/*', {read: false}).pipe(clean({force: true}));
-
+gulp.task('clean', function (cb) {
+	return gulp.src('./dist', {read: false}).pipe(plumber()).pipe(rimraf());
 });
 
 gulp.task('default', ['createFullSdk', 'createSdkNoEncryption', 'createApplication']);
