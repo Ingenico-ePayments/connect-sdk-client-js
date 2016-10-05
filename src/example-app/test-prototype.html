@@ -1,4 +1,8 @@
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script>
+    $.noConflict();
+</script>
+<script src="prototype.js"></script>
 
 <script src="js-sdk/vendor/forge-0.6.39/js/util.js"></script>
 <script src="js-sdk/vendor/forge-0.6.39/js/cipher.js"></script>
@@ -17,8 +21,6 @@
 <script src="js-sdk/vendor/forge-0.6.39/js/pkcs1.js"></script>
 <script src="js-sdk/vendor/forge-0.6.39/js/rsa.js"></script>
 <script src="js-sdk/vendor/forge-0.6.39/js/forge.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js"></script>
 
 <script src="js-sdk/globalcollect/core.js"></script>
 <script src="js-sdk/globalcollect/promise.js"></script>
@@ -66,32 +68,28 @@
 
 
 <script>
-  $(document).ready(function () {
+    jQuery(document).ready(function($) {
 
-
-
-        requirejs(["GCsdk.Session"], function (sdksession, validationrule) {
-            var sessionDetails = {
+        var sessionDetails = {
                 clientSessionID: "",
                 customerId: "",
                 region: "EU",
                 environment: "SANDBOX"
             };
 
-            var paymentDetails = {
-                totalAmount: 10000,
-                countryCode: "NL",
-                locale: "NL_nl",
-                currency: "EUR",
-                isRecurring: false
-            };
-            var session = new sdksession(sessionDetails);
-            var cardNumber = '4567 3500 0042 7977';
+        var paymentDetails = {
+            totalAmount: 10000,
+            countryCode: "NL",
+            locale: "NL_nl",
+            currency: "EUR",
+            isRecurring: false
+        };
 
-            var cardNumber = '4567 3500 0042 7977';
+        var session = new GCsdk.Session(sessionDetails);
+        var cardNumber = '4567 3500 0042 7977';
         // Get payment products from API
         session.getBasicPaymentItems(paymentDetails).then(function(paymentProducts) {
-          session.getIinDetails(cardNumber, paymentDetails).then(function (iinDetailsResponse) {
+            session.getIinDetails(cardNumber, paymentDetails).then(function(iinDetailsResponse) {
                 if (iinDetailsResponse.status !== "SUPPORTED") {
 
                     // Card number is not a valid payment method
@@ -100,7 +98,7 @@
                     return;
                 }
 
-                session.getPaymentProduct(iinDetailsResponse.paymentProductId, paymentDetails).then(function (paymentProduct) {
+                session.getPaymentProduct(iinDetailsResponse.paymentProductId, paymentDetails).then(function(paymentProduct) {
 
                     var paymentRequest = session.getPaymentRequest();
                     paymentRequest.setPaymentProduct(paymentProduct);
@@ -118,7 +116,7 @@
                         }
                     }
 
-                    session.getEncryptor().encrypt(paymentRequest).then(function (paymentHash) {
+                    session.getEncryptor().encrypt(paymentRequest).then(function(paymentHash) {
 
                         //alert("Encrypted ok, payment method is type " + paymentProduct.displayHints.label);
 
@@ -126,26 +124,22 @@
                         $("#PaymentHash").val(paymentHash);
                         $("body").text(paymentHash);
 
-                    }, function (errors) {
+                    }, function(errors) {
 
                         //alert("Failed to encrypt due to " + JSON.stringify(errors));
                     });
 
-                }, function () {
+                }, function() {
 
                     //alert("API request failed.");
                 });
 
-            }, function () {
+            }, function() {
 
                 //alert("API request failed.");
             });
         }, function() {
             //alert("API request failed.");
         });
-
-        });
-
     });
-
 </script>

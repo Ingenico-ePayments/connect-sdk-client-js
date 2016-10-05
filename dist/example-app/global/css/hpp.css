@@ -1,0 +1,325 @@
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance:textfield;
+}
+body {
+
+	 background-color:#ffffff;
+	 background-repeat:;
+	 background-position:;
+	 background-image:;
+}
+ body {
+	 font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+	 font-size:15px;
+	 color:#000000;
+}
+ body a {
+	 text-decoration:none;
+	 color:#000000;
+}
+ body a:hover {
+	 text-decoration:underline;
+	 color:#262626;
+}
+ body a:active {
+	 text-decoration:underline;
+	 color:#262626;
+}
+ body input {
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#aaaaaa;
+	 border-radius:2px;
+	 box-shadow:rgba(0, 0, 0, 0.15) 2px 3px 5px 0px inset;
+}
+ body .btn-primary {
+	 background-color:#00af00;
+	 color:#ffffff;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#00af00;
+	 border-radius:0px;
+	 font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+	 font-size:18px;
+}
+ body .btn-primary:hover {
+	 background-color:#007d00;
+	 color:#ffffff;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#007d00;
+	 border-radius:2px;
+}
+ body .btn-primary:active {
+	 background-color:#007d00;
+	 color:#ffffff;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#007d00;
+	 border-radius:2px;
+}
+ body .btn-secondary {
+	 background-color:#ffffff;
+	 color:#000000;
+	 border-style:none;
+	 border-width:0px;
+	 border-color:#ffffff;
+	 border-radius:0px;
+	 font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+	 font-size:15px;
+}
+ body .btn-secondary:hover {
+	 background-color:#ffffff;
+	 color:#000000;
+	 border-style:none;
+	 border-width:0px;
+	 border-color:#ffffff;
+	 border-radius:0px;
+}
+ body .btn-secondary:active {
+	 background-color:#007d00;
+	 color:#ffffff;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#007d00;
+	 border-radius:2px;
+}
+ body .btn-tertiary {
+	 background-color:#ffffff;
+	 color:#000000;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#e5e5e5;
+	 border-radius:0;
+	 font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;
+	 font-size:15px;
+}
+ body .btn-tertiary:hover {
+	 background-color:#cccccc;
+	 color:#000000;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#cccccc;
+	 border-radius:0;
+}
+ body .btn-tertiary:active {
+	 background-color:#007d00;
+	 color:#ffffff;
+	 border-style:solid;
+	 border-width:1px;
+	 border-color:#007d00;
+	 border-radius:2px;
+}
+ #header {
+	 background-color:#f2f2f2;
+	 background-repeat:;
+	 background-position:;
+	 background-image:;
+}
+ #header {
+	 border-style:;
+	 border-width:;
+	 border-color:;
+	 border-radius:;
+}
+ #main {
+	 background-color:;
+	 background-repeat:;
+	 background-position:;
+	 background-image:;
+}
+ #main {
+	 border-style:;
+	 border-width:;
+	 border-color:;
+	 border-radius:;
+}
+ #merchantname {
+	 font-family:"Comic Sans MS",cursive,sans-serif;
+	 font-size:18px;
+	 color:#ff0000;
+	 font-weight:normal;
+	 font-style:italic;
+	 text-decoration:underline;
+}
+ #precarttext {
+	 font-family:;
+	 font-size:;
+	 color:#000000;
+	 display:none;
+	 font-weight:normal;
+	 font-style:italic;
+	 text-decoration:none;
+}
+ #selectmethod {
+	 font-family:;
+	 font-size:;
+	 color:#000000;
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #shoppingcartwrapper {
+	 background-color:#e5e5e5;
+	 background-image:;
+	 background-repeat:;
+	 background-position:;
+	 border-style:none;
+	 border-width:2px;
+	 border-color:#f2f2f2;
+	 border-radius:0px;
+}
+ #paymentoptionswrapper {
+	 background-color:;
+	 background-image:;
+	 background-repeat:;
+	 background-position:;
+	 border-style:none;
+	 border-width:2px;
+	 border-color:#f2f2f2;
+	 border-radius:;
+}
+ #postcarttext {
+	 font-family:;
+	 font-size:15px;
+	 color:#000000;
+	 display:none;
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #securePaymentblock {
+	 font-family:;
+	 font-size:;
+	 color:#00AF00;
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #remembermeText {
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #paymentbuttontext {
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #cancelbuttontext {
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #prefootertext {
+	 font-family:;
+	 font-size:15px;
+	 color:#000000;
+	 display:none;
+	 font-weight:normal;
+	 font-style:normal;
+	 text-decoration:none;
+}
+ #footer {
+	 background-color:#f2f2f2;
+	 background-repeat:;
+	 background-position:;
+}
+ #footer {
+	 border-style:;
+	 border-width:;
+	 border-color:;
+	 border-radius:;
+}
+ #globalcollectfooter {
+	 background-color:transparent;
+	 background-repeat:;
+	 background-position:;
+}
+ #globalcollectfooter {
+	 border-style:;
+	 border-width:;
+	 border-color:;
+	 border-radius:;
+}
+ #globalcollectimage {
+	 display:block;
+}
+ @media (min-width:0px) {
+	 #logoimage{
+		 background-image:url(../images/logo.png);
+		 width:174px;
+		 height:36px;
+	}
+}
+ #logoimage {
+	 display:block;
+	}
+#merchantname {
+	display: none;
+}
+.form-group {
+  position: relative;
+}
+.cc-image {
+  display: block;
+  position: absolute;
+  right: 10px;
+  top: 42px;
+  height: 26px;
+  width: 39px;
+}
+.cc-image img {
+  width: 100%;
+}
+#debug {
+  position: fixed;
+  max-width: 95%;
+  top: 10px;
+  right: 10px;
+  display: none;
+}
+.end #header, .end #footer, .end #globalcollectfooter {
+  display: none;
+}
+.paymentoption .info-popover {
+  bottom: 10px;
+  right: 6px;
+}
+.popover {
+  max-width: 240px;
+}
+#paymentoptionslist li .btn-tertiary img {
+  margin: 0 10px;
+}
+.alert {
+    border: 1px solid transparent;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    padding: 15px;
+}
+.alert-info {
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+    color: #31708f;
+}
+
+.form-control.euro {
+  width: 65%;
+  display: inline;
+}
+.form-control.cent {
+  width: 20%;
+  display: inline;
+}
+.form-group:not(.has-error) .error {
+  display: none !important;
+}
+.form-group.has-error > .error:nth-child(1n+4) {
+  display: none !important;
+}

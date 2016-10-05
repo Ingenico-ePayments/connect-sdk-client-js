@@ -19,7 +19,8 @@ define("GCsdk.PaymentRequest", ["GCsdk.core"], function(GCsdk) {
         if (field.dataRestrictions.isRequired) {
           // is this field present in the request?
           var storedValue = this.getValue(field.id);
-          if (!storedValue) {
+          if (!storedValue && !this.getAccountOnFile()) {
+              // if we have an acoount on file the account on file could have the field, so we can ignore it
             allRequiredFieldsPresent = false;
           }
         }

@@ -8,7 +8,7 @@
             detectionTests[name] = fn;
         }
     };
-    
+
     /* SDK internal function */
     GCsdk.detect = function(testName) {
         if (typeof testCache[testCache] === 'undefined') {

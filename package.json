@@ -1,6 +1,6 @@
 {
   "name": "connect-sdk-client-js",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "The JavaScript based client SDK that can be used for client to server communication between you and the GlobalCollect platform",
   "main": "gulpfile.js",
   "dependencies": {
@@ -13,7 +13,9 @@
     "gulp-rimraf": "^0.2.0",
     "gulp-plumber": "^1.1.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "gulp-replace": "^0.5.4"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ingenico-ePayments/connect-sdk-client-js.git"
