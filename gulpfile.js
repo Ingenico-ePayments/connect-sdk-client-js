@@ -6,128 +6,124 @@ var gulp = require('gulp')
 	, stripDebug = require('gulp-strip-debug')
 	, sourcemaps = require('gulp-sourcemaps')
 	, replace = require('gulp-replace')
-  , plumber = require('gulp-plumber')
+	, plumber = require('gulp-plumber')
 	, fs = require("fs")
 
 	, fullSdkSrc = [
-		"src/example-app/js-sdk/vendor/es5shim.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/util.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/cipher.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/cipherModes.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/aes.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/oids.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/asn1.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/sha1.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/sha256.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/sha512.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/md.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/hmac.js",
-		//"src/example-app/js-sdk/vendor/forge-0.6.39/js/pem.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/prng.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/random.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/jsbn.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/pkcs1.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/rsa.js",
-		//"src/example-app/js-sdk/vendor/forge-0.6.39/js/pbe.js",
-		//"src/example-app/js-sdk/vendor/forge-0.6.39/js/tls.js",
-		//"src/example-app/js-sdk/vendor/forge-0.6.39/js/debug.js",
-		"src/example-app/js-sdk/vendor/forge-0.6.39/js/forge.js",
-		"src/example-app/js-sdk/globalcollect/core.js",
-		"src/example-app/js-sdk/globalcollect/promise.js",
-		"src/example-app/js-sdk/globalcollect/net.js",
-		"src/example-app/js-sdk/globalcollect/util.js",
-		"src/example-app/js-sdk/globalcollect/PublicKeyResponse.js",
-		"src/example-app/js-sdk/globalcollect/C2SCommunicatorConfiguration.js",
-		"src/example-app/js-sdk/globalcollect/IinDetailsResponse.js",
-		"src/example-app/js-sdk/globalcollect/C2SCommunicator.js",
-		"src/example-app/js-sdk/globalcollect/LabelTemplateElement.js",
-		"src/example-app/js-sdk/globalcollect/Attribute.js",
-		"src/example-app/js-sdk/globalcollect/AccountOnFileDisplayHints.js",
-		"src/example-app/js-sdk/globalcollect/AccountOnFile.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductDisplayHints.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProduct.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroup.js",
-		"src/example-app/js-sdk/globalcollect/MaskedString.js",
-		"src/example-app/js-sdk/globalcollect/MaskingUtil.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleLuhn.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleExpirationDate.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleFixedList.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleLength.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleRange.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleRegularExpression.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleEmailAddress.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleFactory.js",
-		"src/example-app/js-sdk/globalcollect/DataRestrictions.js",
-		"src/example-app/js-sdk/globalcollect/ValueMappingElement.js",
-		"src/example-app/js-sdk/globalcollect/FormElement.js",
-		"src/example-app/js-sdk/globalcollect/Tooltip.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductFieldDisplayHints.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductField.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProduct.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductGroup.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProducts.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroups.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentItems.js",
-		"src/example-app/js-sdk/globalcollect/PaymentRequest.js",
-		"src/example-app/js-sdk/globalcollect/C2SPaymentProductContext.js",
-		"src/example-app/js-sdk/globalcollect/JOSEEncryptor.js",
-		"src/example-app/js-sdk/globalcollect/Encryptor.js",
-		"src/example-app/js-sdk/globalcollect/session.js"
+		"node_modules/node-forge/js/util.js",
+		"node_modules/node-forge/js/cipher.js",
+		"node_modules/node-forge/js/cipherModes.js",
+		"node_modules/node-forge/js/aes.js",
+		"node_modules/node-forge/js/oids.js",
+		"node_modules/node-forge/js/asn1.js",
+		"node_modules/node-forge/js/sha1.js",
+		"node_modules/node-forge/js/sha256.js",
+		"node_modules/node-forge/js/sha512.js",
+		"node_modules/node-forge/js/md.js",
+		"node_modules/node-forge/js/hmac.js",
+		"node_modules/node-forge/js/prng.js",
+		"node_modules/node-forge/js/random.js",
+		"node_modules/node-forge/js/jsbn.js",
+		"node_modules/node-forge/js/pkcs1.js",
+		"node_modules/node-forge/js/rsa.js",
+		"node_modules/node-forge/js/forge.js",
+		"src/core.js",
+		"src/promise.js",
+		"src/net.js",
+		"src/util.js",
+		"src/PublicKeyResponse.js",
+		"src/C2SCommunicatorConfiguration.js",
+		"src/IinDetailsResponse.js",
+		"src/C2SCommunicator.js",
+		"src/LabelTemplateElement.js",
+		"src/Attribute.js",
+		"src/AccountOnFileDisplayHints.js",
+		"src/AccountOnFile.js",
+		"src/PaymentProductDisplayHints.js",
+		"src/BasicPaymentProduct.js",
+		"src/BasicPaymentProductGroup.js",
+		"src/MaskedString.js",
+		"src/MaskingUtil.js",
+		"src/ValidationRuleLuhn.js",
+		"src/ValidationRuleExpirationDate.js",
+		"src/ValidationRuleFixedList.js",
+		"src/ValidationRuleLength.js",
+		"src/ValidationRuleRange.js",
+		"src/ValidationRuleRegularExpression.js",
+		"src/ValidationRuleEmailAddress.js",
+		"src/ValidationRuleFactory.js",
+		"src/DataRestrictions.js",
+		"src/ValueMappingElement.js",
+		"src/FormElement.js",
+		"src/Tooltip.js",
+		"src/PaymentProductFieldDisplayHints.js",
+		"src/PaymentProductField.js",
+		"src/PaymentProduct.js",
+		"src/PaymentProductGroup.js",
+		"src/BasicPaymentProducts.js",
+		"src/BasicPaymentProductGroups.js",
+		"src/BasicPaymentItems.js",
+		"src/PaymentRequest.js",
+		"src/C2SPaymentProductContext.js",
+		"src/JOSEEncryptor.js",
+		"src/Encryptor.js",
+		"src/session.js"
 	]
 
 	, sdkSrcNoEncryption = [
-		"src/example-app/js-sdk/vendor/es5shim.js",
-		"src/example-app/js-sdk/globalcollect/core.js",
-		"src/example-app/js-sdk/globalcollect/promise.js",
-		"src/example-app/js-sdk/globalcollect/net.js",
-		"src/example-app/js-sdk/globalcollect/util.js",
-		"src/example-app/js-sdk/globalcollect/PublicKeyResponse.js",
-		"src/example-app/js-sdk/globalcollect/C2SCommunicatorConfiguration.js",
-		"src/example-app/js-sdk/globalcollect/IinDetailsResponse.js",
-		"src/example-app/js-sdk/globalcollect/C2SCommunicator.js",
-		"src/example-app/js-sdk/globalcollect/LabelTemplateElement.js",
-		"src/example-app/js-sdk/globalcollect/Attribute.js",
-		"src/example-app/js-sdk/globalcollect/AccountOnFileDisplayHints.js",
-		"src/example-app/js-sdk/globalcollect/AccountOnFile.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductDisplayHints.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProduct.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroup.js",
-		"src/example-app/js-sdk/globalcollect/MaskedString.js",
-		"src/example-app/js-sdk/globalcollect/MaskingUtil.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleLuhn.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleExpirationDate.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleFixedList.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleLength.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleRange.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleRegularExpression.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleEmailAddress.js",
-		"src/example-app/js-sdk/globalcollect/ValidationRuleFactory.js",
-		"src/example-app/js-sdk/globalcollect/DataRestrictions.js",
-		"src/example-app/js-sdk/globalcollect/ValueMappingElement.js",
-		"src/example-app/js-sdk/globalcollect/FormElement.js",
-		"src/example-app/js-sdk/globalcollect/Tooltip.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductFieldDisplayHints.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductField.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProduct.js",
-		"src/example-app/js-sdk/globalcollect/PaymentProductGroup.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProducts.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentProductGroups.js",
-		"src/example-app/js-sdk/globalcollect/BasicPaymentItems.js",
-		"src/example-app/js-sdk/globalcollect/PaymentRequest.js",
-		"src/example-app/js-sdk/globalcollect/C2SPaymentProductContext.js",
-		"src/example-app/js-sdk/globalcollect/session.js"
+		"src/core.js",
+		"src/promise.js",
+		"src/net.js",
+		"src/util.js",
+		"src/PublicKeyResponse.js",
+		"src/C2SCommunicatorConfiguration.js",
+		"src/IinDetailsResponse.js",
+		"src/C2SCommunicator.js",
+		"src/LabelTemplateElement.js",
+		"src/Attribute.js",
+		"src/AccountOnFileDisplayHints.js",
+		"src/AccountOnFile.js",
+		"src/PaymentProductDisplayHints.js",
+		"src/BasicPaymentProduct.js",
+		"src/BasicPaymentProductGroup.js",
+		"src/MaskedString.js",
+		"src/MaskingUtil.js",
+		"src/ValidationRuleLuhn.js",
+		"src/ValidationRuleExpirationDate.js",
+		"src/ValidationRuleFixedList.js",
+		"src/ValidationRuleLength.js",
+		"src/ValidationRuleRange.js",
+		"src/ValidationRuleRegularExpression.js",
+		"src/ValidationRuleEmailAddress.js",
+		"src/ValidationRuleFactory.js",
+		"src/DataRestrictions.js",
+		"src/ValueMappingElement.js",
+		"src/FormElement.js",
+		"src/Tooltip.js",
+		"src/PaymentProductFieldDisplayHints.js",
+		"src/PaymentProductField.js",
+		"src/PaymentProduct.js",
+		"src/PaymentProductGroup.js",
+		"src/BasicPaymentProducts.js",
+		"src/BasicPaymentProductGroups.js",
+		"src/BasicPaymentItems.js",
+		"src/PaymentRequest.js",
+		"src/C2SPaymentProductContext.js",
+		"src/JOSEEncryptor.js",
+		"src/Encryptor.js",
+		"src/session.js"
 	];
 
 var VERSION = fs.readFileSync("VERSION.TXT", "utf8");
 
 gulp.task('createFullSdk', function () {
-  gulp.src(fullSdkSrc)
-  		.pipe(sourcemaps.init())
-		.pipe(concat('gcsdk.js'))
-				.pipe(replace(/\$\{version\}/g, VERSION))
+	gulp.src(fullSdkSrc)
+		.pipe(sourcemaps.init())
+		.pipe(concat('connectsdk.js'))
+		.pipe(replace(/\$\{version\}/g, VERSION))
 		.pipe(stripDebug())
 		.pipe(gulp.dest('./dist/'))
-		.pipe(concat('gcsdk.min.js'))
+		.pipe(concat('connectsdk.min.js'))
 		.pipe(uglify())
 		.pipe(sourcemaps.write('.'))
 		.pipe(gulp.dest('./dist/'));
@@ -136,27 +132,14 @@ gulp.task('createFullSdk', function () {
 gulp.task('createSdkNoEncryption', function () {
 	gulp.src(sdkSrcNoEncryption)
 		.pipe(sourcemaps.init())
-		.pipe(concat('gcsdk.noEncrypt.js'))
-				.pipe(replace(/\$\{version\}/g, VERSION))
+		.pipe(concat('connectsdk.noEncrypt.js'))
+		.pipe(replace(/\$\{version\}/g, VERSION))
 		.pipe(stripDebug())
 		.pipe(gulp.dest('./dist/'))
-		.pipe(concat('gcsdk.noEncrypt.min.js'))
+		.pipe(concat('connectsdk.noEncrypt.min.js'))
 		.pipe(uglify())
 		.pipe(sourcemaps.write('.'))
 		.pipe(gulp.dest('./dist/'));
-});
-
-gulp.task('createApplication', function () {
-
-	// exaple app. The SDK is compilen from the references in the html file.
-	gulp.src('./src/example-app/global/**/*').pipe(gulp.dest('./dist/example-app/global/'));
-	gulp.src('./src/example-app/*.html')
-		.pipe(usemin({
-			css: ['concat'],
-			js: [replace(/\$\{version\}/g, VERSION), sourcemaps.init(), uglify(), sourcemaps.write('.')]
-		}))
-		.pipe(gulp.dest('./dist/example-app/'));
-
 });
 
 // clean folder
@@ -164,4 +147,4 @@ gulp.task('clean', function (cb) {
 	return gulp.src('./dist', { read: false }).pipe(plumber()).pipe(rimraf());
 });
 
-gulp.task('default', ['createFullSdk', 'createSdkNoEncryption', 'createApplication']);
+gulp.task('default', ['createFullSdk', 'createSdkNoEncryption']);

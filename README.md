@@ -11,23 +11,22 @@ The JavaScript SDK helps you to communicate with the [Ingenico Connect](http://w
 * validation of input, and
 * a check to determine to which payment provider a card number is associated.
 
-Its use is demonstrated by an example application that is also included. This application constructs the user interface elements used throughout the payment process from API responses on the fly. 
-
 See the [Ingenico ePayments Developer Hub](https://developer.globalcollect.com/documentation/sdk/javascript/) for more information on how to use the API.
+
+## Examples
+
+⚠ Please note that all examples have been moved to their own [repository](https://github.com/Ingenico-ePayments/connect-sdk-client-js-example).
 
 ## Structure of this repository
 
 This repository consists out of three main components:
 
-1. The source code of the SDK itself: `/src/example-app/js-sdk/`
-2. The source code of the example application: `/src/example-app/`
-3. A distributable folder containing the result of the builds of the previous two components: `/dist/`
-  - `/dist/gcsdk.js` - The concatenated but not minified full SDK source
-  - `/dist/gcsdk.min.js` - The minified version of `gcsdk.js`
-  - `/dist/gcsdk.noEncrypt.js` - The concatenated but not minified SDK source without the encryption components
-  - `/dist/gcsdk.noEncrypt.min.js` - The minified version of `gcsdk.noEncrypt.js`
-
-If you would like to use the example application to base your own implementation on we advice to use the version that has been built. It already contains the minified SDK instead of the SDK source code like in the version of the application in `/src/example-app/`.
+1. The source code of the SDK itself: `/src/`
+2. A distributable folder containing the result of the builds of the previous two components: `/dist/`
+  - `/dist/connectsdk.js` - The concatenated but not minified full SDK source
+  - `/dist/connectsdk.min.js` - The minified version of `connectsdk.js`
+  - `/dist/connectsdk.noEncrypt.js` - The concatenated but not minified SDK source without the encryption components
+  - `/dist/connectsdk.noEncrypt.min.js` - The minified version of `connectsdk.noEncrypt.js`
 
 ## Building the repository
 
