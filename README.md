@@ -11,7 +11,7 @@ The JavaScript SDK helps you to communicate with the [Ingenico Connect](http://w
 * validation of input, and
 * a check to determine to which payment provider a card number is associated.
 
-See the [Ingenico ePayments Developer Hub](https://developer.globalcollect.com/documentation/sdk/javascript/) for more information on how to use the API.
+See the [Ingenico ePayments Developer Hub](https://developer.globalcollect.com/documentation/sdk/mobile/javascript/) for more information on how to use the SDK.
 
 ## Examples
 

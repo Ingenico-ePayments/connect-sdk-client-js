@@ -278,6 +278,7 @@ class Session {
     +Session(SessionDetails sessionDetails)	
 	+Promise<JSON> convertAmount(amount, source, target)
 	+Encryptor getEncryptor()
+	+Boolean isEnvironmentTypeProduction()
 	+Promise<IinDetailsResponse> getIinDetails(String partialCreditCardNumber, PaymentDetails paymentDetails)
 	+Promise<PaymentProduct> getPaymentProduct(String productId, PaymentDetails paymentDetails)
 	+Promise<PaymentProductGroup> getPaymentProductGroup(String groupId, PaymentDetails paymentDetails)
@@ -285,12 +286,14 @@ class Session {
 	+Promise<BasicPaymentProductGroups> getBasicPaymentProductGroups(PaymentDetails paymentDetails)
 	+Promise<BasicPaymentItems> getBasicPaymentItems(PaymentDetails paymentDetails, boolean isGrouped)
 	+Promise<JSON> getPaymentProductDirectory(paymentProductId, currencyCode, countryCode)
+	+Promise<JSON> getPaymentProductNetworks(paymentProductId, PaymentDetails paymentDetails)	
 	+PaymentRequest getPaymentRequest()
 	+Promise<PublicKeyResponse> getPublicKey()
 }
 
 class C2SCommunicator {
 	+C2SCommunicator(C2SCommunicatorConfiguration C2SCommunicatorConfiguration, PaymentProduct basicPaymentProduct)
+	+Boolean isEnvironmentTypeProduction()
 	+Promise<PaymentProducts> getPaymentProducts(C2SPaymentProductContext context)
 	+Promise<PaymentProduct> getPaymentProduct(String paymentProductId, C2SPaymentProductContext context)
 	+Promise<IinDetailsResponse> getPaymentProductIdByCreditCardNumber(String partialCreditCardNumber, C2SPaymentProductContext context)

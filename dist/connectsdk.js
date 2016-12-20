@@ -5601,6 +5601,18 @@ oids['pbeWithSHAAnd128BitRC2-CBC'] = '1.2.840.113549.1.12.1.5';
 oids['1.2.840.113549.1.12.1.6'] = 'pbewithSHAAnd40BitRC2-CBC';
 oids['pbewithSHAAnd40BitRC2-CBC'] = '1.2.840.113549.1.12.1.6';
 
+// hmac OIDs
+oids['1.2.840.113549.2.7'] = 'hmacWithSHA1';
+oids['hmacWithSHA1'] = '1.2.840.113549.2.7';
+oids['1.2.840.113549.2.8'] = 'hmacWithSHA224';
+oids['hmacWithSHA224'] = '1.2.840.113549.2.8';
+oids['1.2.840.113549.2.9'] = 'hmacWithSHA256';
+oids['hmacWithSHA256'] = '1.2.840.113549.2.9';
+oids['1.2.840.113549.2.10'] = 'hmacWithSHA384';
+oids['hmacWithSHA384'] = '1.2.840.113549.2.10';
+oids['1.2.840.113549.2.11'] = 'hmacWithSHA512';
+oids['hmacWithSHA512'] = '1.2.840.113549.2.11';
+
 // symmetric key algorithm oids
 oids['1.2.840.113549.3.7'] = 'des-EDE3-CBC';
 oids['des-EDE3-CBC'] = '1.2.840.113549.3.7';
@@ -5666,7 +5678,9 @@ oids['2.5.29.28'] = 'issuingDistributionPoint';
 oids['2.5.29.29'] = 'certificateIssuer';
 oids['2.5.29.30'] = 'nameConstraints';
 oids['2.5.29.31'] = 'cRLDistributionPoints';
+oids['cRLDistributionPoints'] = '2.5.29.31';
 oids['2.5.29.32'] = 'certificatePolicies';
+oids['certificatePolicies'] = '2.5.29.32';
 oids['2.5.29.33'] = 'policyMappings';
 oids['2.5.29.34'] = 'policyConstraints'; // deprecated use .36
 oids['2.5.29.35'] = 'authorityKeyIdentifier';
@@ -5678,6 +5692,10 @@ oids['2.5.29.46'] = 'freshestCRL';
 oids['2.5.29.54'] = 'inhibitAnyPolicy';
 
 // extKeyUsage purposes
+oids['1.3.6.1.4.1.11129.2.4.2'] = 'timestampList';
+oids['timestampList'] = '1.3.6.1.4.1.11129.2.4.2';
+oids['1.3.6.1.5.5.7.1.1'] = 'authorityInfoAccess';
+oids['authorityInfoAccess'] = '1.3.6.1.5.5.7.1.1';
 oids['1.3.6.1.5.5.7.3.1'] = 'serverAuth';
 oids['serverAuth'] = '1.3.6.1.5.5.7.3.1';
 oids['1.3.6.1.5.5.7.3.2'] = 'clientAuth';
@@ -6169,7 +6187,19 @@ asn1.toDer = function(obj) {
         value.putInt16(obj.value.charCodeAt(i));
       }
     } else {
-      value.putBytes(obj.value);
+      // ensure integer is minimally-encoded
+      if(obj.type === asn1.Type.INTEGER &&
+        obj.value.length > 1 &&
+        // leading 0x00 for positive integer
+        ((obj.value.charCodeAt(0) === 0 &&
+        (obj.value.charCodeAt(1) & 0x80) === 0) ||
+        // leading 0xFF for negative integer
+        (obj.value.charCodeAt(0) === 0xFF &&
+        (obj.value.charCodeAt(1) & 0x80) === 0x80))) {
+        value.putBytes(obj.value.substr(1));
+      } else {
+        value.putBytes(obj.value);
+      }
     }
   }
 
@@ -7060,16 +7090,16 @@ sha1.create = function() {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
-    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next;
+      bits = next >>> 0;
     }
+    finalBlock.putInt32(bits);
 
     var s2 = {
       h0: _state.h0,
@@ -7138,7 +7168,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7150,7 +7181,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7163,7 +7195,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7175,7 +7208,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7188,7 +7222,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x8F1BBCDC + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7201,7 +7236,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0xCA62C1D6 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7435,16 +7471,16 @@ sha256.create = function() {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
-    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next;
+      bits = next >>> 0;
     }
+    finalBlock.putInt32(bits);
 
     var s2 = {
       h0: _state.h0,
@@ -7577,11 +7613,15 @@ function _update(s, w, bytes) {
       h = g;
       g = f;
       f = e;
-      e = (d + t1) | 0;
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      // can't truncate with `| 0`
+      e = (d + t1) >>> 0;
       d = c;
       c = b;
       b = a;
-      a = (t1 + t2) | 0;
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      // can't truncate with `| 0`
+      a = (t1 + t2) >>> 0;
     }
 
     // update hash state
@@ -7855,16 +7895,16 @@ sha512.create = function(algorithm) {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
-    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next;
+      bits = next >>> 0;
     }
+    finalBlock.putInt32(bits);
 
     var h = new Array(_h.length);
     for(var i = 0; i < _h.length; ++i) {
@@ -12564,7 +12604,19 @@ function _bnToBytes(b) {
   if(hex[0] >= '8') {
     hex = '00' + hex;
   }
-  return forge.util.hexToBytes(hex);
+  var bytes = forge.util.hexToBytes(hex);
+
+  // ensure integer is minimally-encoded
+  if(bytes.length > 1 &&
+    // leading 0x00 for positive integer
+    ((bytes.charCodeAt(0) === 0 &&
+    (bytes.charCodeAt(1) & 0x80) === 0) ||
+    // leading 0xFF for negative integer
+    (bytes.charCodeAt(0) === 0xFF &&
+    (bytes.charCodeAt(1) & 0x80) === 0x80))) {
+    return bytes.substr(1);
+  }
+  return bytes;
 }
 
 /**
@@ -13304,7 +13356,7 @@ define("connectsdk.Util", ["connectsdk.core"], function(connectsdk) {
 			return {
 				screenSize : window.innerWidth + "x" + window.innerHeight,
 				platformIdentifier : window.navigator.userAgent,
-				sdkIdentifier : ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.0.0',
+				sdkIdentifier : ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.0.1',
 				sdkCreator: 'Ingenico'
 			};
 		};
@@ -13454,23 +13506,24 @@ define("connectsdk.IinDetailsResponse", ["connectsdk.core", "connectsdk.promise"
 	connectsdk.IinDetailsResponse = IinDetailsResponse;
 	return IinDetailsResponse;
 });
-define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse"], function(connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse) {
-	var C2SCommunicator = function(c2SCommunicatorConfiguration, paymentProduct) {
+define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse) {
+	var C2SCommunicator = function (c2SCommunicatorConfiguration, paymentProduct) {
 		var _c2SCommunicatorConfiguration = c2SCommunicatorConfiguration;
 		var _util = new Util();
 		var _cache = {};
 		var _providedPaymentProduct = paymentProduct;
 		var that = this;
+		var _removedPaymentProductIds = [302, 320];
 
 		var _mapType = {
-			"expirydate" : "tel",
-			"string" : "text",
-			"numericstring" : "tel",
-			"integer" : "number",
-			"expirationDate" : "tel"
+			"expirydate": "tel",
+			"string": "text",
+			"numericstring": "tel",
+			"integer": "number",
+			"expirationDate": "tel"
 		};
 
-		var _cleanJSON = function(json, url) {
+		var _cleanJSON = function (json, url) {
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
 				field.type = (field.displayHints.obfuscate) ? "password" : _mapType[field.type];
@@ -13489,7 +13542,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				}
 			}
 			// apply sortorder
-			json.fields.sort(function(a, b) {
+			json.fields.sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
 					return -1;
 				}
@@ -13500,12 +13553,22 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return json;
 		};
 
-		var _extendLogoUrl = function(json, url, postfix) {
+		var _removeProducts = function (json) {
+			for (var i = json.paymentProducts.length - 1, il = 0; i >= il; i--) {
+				var product = json.paymentProducts[i];
+				if (product && _removedPaymentProductIds.indexOf(product.id) > -1) {
+					json.paymentProducts.splice(i, 1);
+				}
+			}
+			return json;
+		}
+
+		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
 				var product = json["paymentProduct" + postfix][i];
 				product.displayHints.logo = url + "/" + product.displayHints.logo;
 			}
-			json["paymentProduct" + postfix].sort(function(a, b) {
+			json["paymentProduct" + postfix].sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
 					return -1;
 				}
@@ -13516,163 +13579,179 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 
 		var metadata = _util.getMetadata();
 
-		this.getBasicPaymentProducts = function(context) {
+		this.getBasicPaymentProducts = function (context) {
 			var promise = new Promise()
-				,cacheBust = new Date().getTime()
-				,cacheKey = "getPaymentProducts-"  + context.totalAmount + "_" + context.countryCode + "_"
-				    + context.locale + "_" + context.isRecurring + "_" + context.currency;
+				, cacheBust = new Date().getTime()
+				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
+					+ context.locale + "_" + context.isRecurring + "_" + context.currency;
 
 			if (_cache[cacheKey]) {
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
 				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
-				    + "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
-				    + "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
-				    + "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
-				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
-				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-				.end(function(res) {
-					if (res.success) {
-						var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
-						_cache[cacheKey] = json;
-						promise.resolve(json);
-					} else {
-						promise.reject();
-					}
-				});
+					+ "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
+					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
+					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
+					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
+							json = _removeProducts(json);
+							_cache[cacheKey] = json;
+							promise.resolve(json);
+						} else {
+							promise.reject();
+						}
+					});
 			}
 			return promise;
 		};
 
-		this.getBasicPaymentProductGroups = function(context) {
+		this.getBasicPaymentProductGroups = function (context) {
 			var promise = new Promise()
-				,cacheBust = new Date().getTime()
-				,cacheKey = "getPaymentProductGroups-"  + context.totalAmount + "_" + context.countryCode + "_"
-				    + context.locale + "_" + context.isRecurring + "_" + context.currency;
+				, cacheBust = new Date().getTime()
+				, cacheKey = "getPaymentProductGroups-" + context.totalAmount + "_" + context.countryCode + "_"
+					+ context.locale + "_" + context.isRecurring + "_" + context.currency;
 
 			if (_cache[cacheKey]) {
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
 				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
-				    + "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
-				    + "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
-				    + "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
-				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
-				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-				.end(function(res) {
-					if (res.success) {
-						var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "Groups");
-						_cache[cacheKey] = json;
-						promise.resolve(json);
-					} else {
-						promise.reject();
-					}
-				});
+					+ "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
+					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
+					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
+					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "Groups");
+							_cache[cacheKey] = json;
+							promise.resolve(json);
+						} else {
+							promise.reject();
+						}
+					});
 			}
 			return promise;
 		};
 
-		this.getPaymentProduct = function(paymentProductId, context) {
+		this.getPaymentProduct = function (paymentProductId, context) {
 			var promise = new Promise()
-				,cacheBust = new Date().getTime()
-				,cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
-				    + context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
-				    + context.currency;
-			if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductId) {
-				if (_cache[cacheKey]) {
-					setTimeout(function() {
+				, cacheBust = new Date().getTime()
+				, cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
+					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
+					+ context.currency;
+
+			if (_removedPaymentProductIds.indexOf(paymentProductId) > -1) {
+				setTimeout(function () {
+					promise.reject({
+						"errorId": "48b78d2d-1b35-4f8b-92cb-57cc2638e901",
+						"errors": [{
+							"code": "1007",
+							"propertyName": "productId",
+							"message": "UNKNOWN_PRODUCT_ID",
+							"httpStatusCode": 404
+						}]
+					});
+				}, 0);
+			} else {
+				if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductId) {
+					if (_cache[cacheKey]) {
+						setTimeout(function () {
+							promise.resolve(_cache[cacheKey]);
+						}, 0);
+					} else {
+						var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
+						_cache[cacheKey] = json;
+						setTimeout(function () {
+							promise.resolve(_cache[cacheKey]);
+						}, 0);
+					}
+				} else if (_cache[cacheKey]) {
+					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
-					_cache[cacheKey] = json;
-					setTimeout(function() {
-						promise.resolve(_cache[cacheKey]);
-					}, 0);
+					Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
+						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
+						+ "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
+						.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+						.end(function (res) {
+							if (res.success) {
+								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+								_cache[cacheKey] = cleanedJSON;
+								promise.resolve(cleanedJSON);
+							} else {
+								promise.reject(res);
+							}
+						});
 				}
-			} else if (_cache[cacheKey]) {
-				setTimeout(function() {
-					promise.resolve(_cache[cacheKey]);
-				}, 0);
-			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
-				    + "/products/" + paymentProductId + "?countryCode=" + context.countryCode
-				    + "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
-				    + "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
-				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
-				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-				.end(function(res) {
-					if (res.success) {
-						var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
-						_cache[cacheKey] = cleanedJSON;
-						promise.resolve(cleanedJSON);
-					} else {
-						promise.reject();
-					}
-				});
 			}
 			return promise;
 		};
 
-		this.getPaymentProductGroup = function(paymentProductGroupId, context) {
+		this.getPaymentProductGroup = function (paymentProductGroupId, context) {
 			var promise = new Promise()
-				,cacheBust = new Date().getTime()
-				,cacheKey = "getPaymentProductGroup-" + paymentProductGroupId + "_" + context.totalAmount + "_"
-				    + context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
-				    + context.currency;
+				, cacheBust = new Date().getTime()
+				, cacheKey = "getPaymentProductGroup-" + paymentProductGroupId + "_" + context.totalAmount + "_"
+					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
+					+ context.currency;
 			if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductGroupId) {
 				if (_cache[cacheKey]) {
-					setTimeout(function() {
+					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
 					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
 					_cache[cacheKey] = json;
-					setTimeout(function() {
+					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				}
 			} else if (_cache[cacheKey]) {
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
 				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
-				    + "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
-				    + "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
-				    + "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
-				.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
-				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-				.end(function(res) {
-					if (res.success) {
-						var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
-						_cache[cacheKey] = cleanedJSON;
-						promise.resolve(cleanedJSON);
-					} else {
-						promise.reject();
-					}
-				});
+					+ "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
+					+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
+					+ "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
+					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+							_cache[cacheKey] = cleanedJSON;
+							promise.resolve(cleanedJSON);
+						} else {
+							promise.reject();
+						}
+					});
 			}
 			return promise;
 		};
 
-		this.getPaymentProductIdByCreditCardNumber = function(partialCreditCardNumber, context) {
+		this.getPaymentProductIdByCreditCardNumber = function (partialCreditCardNumber, context) {
 			var promise = new Promise()
-			     ,iinDetailsResponse = new IinDetailsResponse()
-			     ,cacheKey = "getPaymentProductIdByCreditCardNumber-" + partialCreditCardNumber;
+				, iinDetailsResponse = new IinDetailsResponse()
+				, cacheKey = "getPaymentProductIdByCreditCardNumber-" + partialCreditCardNumber;
 
 			var that = this;
 			this.context = context;
 			if (_cache[cacheKey]) {// cache is based on digit 1-6
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				var isEnoughDigits = function(partialCreditCardNumber) {
+				var isEnoughDigits = function (partialCreditCardNumber) {
 					if (partialCreditCardNumber.length < 6) {
 						return false;
 					}
@@ -13680,48 +13759,48 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				};
 				if (isEnoughDigits(partialCreditCardNumber)) {
 					Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
-					.data(JSON.stringify(this.convertContextToIinDetailsContext(partialCreditCardNumber, this.context)))
-					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
-					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-					.end(function(res) {
-						if (res.success) {
-							iinDetailsResponse.json = res.responseJSON;
-							iinDetailsResponse.countryCode = res.responseJSON.countryCode;
-							iinDetailsResponse.paymentProductId = res.responseJSON.paymentProductId;
-							iinDetailsResponse.isAllowedInContext = res.responseJSON.isAllowedInContext;
-							iinDetailsResponse.coBrands = res.responseJSON.coBrands;
-							// check if this card is supported
-							// if isAllowedInContext is available in the response set status and resolve
-							if(res.responseJSON.hasOwnProperty('isAllowedInContext')){
-								iinDetailsResponse.status = "SUPPORTED";
-								if (iinDetailsResponse.isAllowedInContext === false) {
-									iinDetailsResponse.status = "EXISTING_BUT_NOT_ALLOWED";
-								}
-								_cache[cacheKey] = iinDetailsResponse;
-								promise.resolve(iinDetailsResponse);
-							} else {
-								//if isAllowedInContext is not available get the payment product again to determine status and resolve
-								that.getPaymentProduct(iinDetailsResponse.paymentProductId, that.context).then(function (paymentProduct) {
-									if (paymentProduct) {
-										iinDetailsResponse.status = "SUPPORTED";
-									} else {
-										iinDetailsResponse.status = "UNSUPPORTED";
+						.data(JSON.stringify(this.convertContextToIinDetailsContext(partialCreditCardNumber, this.context)))
+						.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+						.end(function (res) {
+							if (res.success) {
+								iinDetailsResponse.json = res.responseJSON;
+								iinDetailsResponse.countryCode = res.responseJSON.countryCode;
+								iinDetailsResponse.paymentProductId = res.responseJSON.paymentProductId;
+								iinDetailsResponse.isAllowedInContext = res.responseJSON.isAllowedInContext;
+								iinDetailsResponse.coBrands = res.responseJSON.coBrands;
+								// check if this card is supported
+								// if isAllowedInContext is available in the response set status and resolve
+								if (res.responseJSON.hasOwnProperty('isAllowedInContext')) {
+									iinDetailsResponse.status = "SUPPORTED";
+									if (iinDetailsResponse.isAllowedInContext === false) {
+										iinDetailsResponse.status = "EXISTING_BUT_NOT_ALLOWED";
 									}
 									_cache[cacheKey] = iinDetailsResponse;
 									promise.resolve(iinDetailsResponse);
-								}, function () {
-									iinDetailsResponse.status = "UNKNOWN";
-									promise.reject(iinDetailsResponse);
-								});
+								} else {
+									//if isAllowedInContext is not available get the payment product again to determine status and resolve
+									that.getPaymentProduct(iinDetailsResponse.paymentProductId, that.context).then(function (paymentProduct) {
+										if (paymentProduct) {
+											iinDetailsResponse.status = "SUPPORTED";
+										} else {
+											iinDetailsResponse.status = "UNSUPPORTED";
+										}
+										_cache[cacheKey] = iinDetailsResponse;
+										promise.resolve(iinDetailsResponse);
+									}, function () {
+										iinDetailsResponse.status = "UNKNOWN";
+										promise.reject(iinDetailsResponse);
+									});
+								}
+							} else {
+								iinDetailsResponse.status = "UNKNOWN";
+								promise.reject(iinDetailsResponse);
 							}
-						} else {
-							iinDetailsResponse.status = "UNKNOWN";
-							promise.reject(iinDetailsResponse);
-						}
-					});
+						});
 				} else {
 					iinDetailsResponse.status = "NOT_ENOUGH_DIGITS";
-					setTimeout(function() {
+					setTimeout(function () {
 						promise.resolve(iinDetailsResponse);
 					}, 0);
 				}
@@ -13743,19 +13822,19 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			}
 		};
 
-		this.getPublicKey = function() {
+		this.getPublicKey = function () {
 			var promise = new Promise()
-			 ,cacheKey = "publicKey";
+				, cacheKey = "publicKey";
 
 			if (_cache[cacheKey]) {
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
 				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/crypto/publickey")
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-					.end(function(res) {
+					.end(function (res) {
 						if (res.success) {
 							var publicKeyResponse = new PublicKeyResponse(res.responseJSON);
 							_cache[cacheKey] = publicKeyResponse;
@@ -13768,19 +13847,19 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		this.getPaymentProductDirectory = function(paymentProductId, currencyCode, countryCode) {
+		this.getPaymentProductDirectory = function (paymentProductId, currencyCode, countryCode) {
 			var promise = new Promise()
-			 ,cacheKey = "getPaymentProductDirectory-" + paymentProductId + "_" + currencyCode + "_" + countryCode;
+				, cacheKey = "getPaymentProductDirectory-" + paymentProductId + "_" + currencyCode + "_" + countryCode;
 
 			if (_cache[cacheKey]) {
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/directory?countryCode=" +  countryCode + "&currencyCode=" + currencyCode)
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/directory?countryCode=" + countryCode + "&currencyCode=" + currencyCode)
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-					.end(function(res) {
+					.end(function (res) {
 						if (res.success) {
 							_cache[cacheKey] = res.responseJSON;
 							promise.resolve(res.responseJSON);
@@ -13792,19 +13871,19 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		this.convertAmount = function(amount, source, target) {
+		this.convertAmount = function (amount, source, target) {
 			var promise = new Promise()
-			 ,cacheKey = "convertAmount-" + amount + "_" + source + "_" + target;
+				, cacheKey = "convertAmount-" + amount + "_" + source + "_" + target;
 
 			if (_cache[cacheKey]) {
-				setTimeout(function() {
+				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
 				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/convert/amount?source=" + source + "&target=" + target + "&amount=" + amount)
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-					.end(function(res) {
+					.end(function (res) {
 						if (res.success) {
 							_cache[cacheKey] = res.responseJSON;
 							promise.resolve(res.responseJSON);
