@@ -7,8 +7,10 @@ define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.Validation
 			if (_json.validators) {
 				for (var key in _json.validators) {
 					var validationRule = validationRuleFactory.makeValidator({type: key, attributes: _json.validators[key]});
-					_validationRules.push(validationRule);
-					_validationRuleByType[validationRule.type] = validationRule;
+					if (validationRule) {
+						_validationRules.push(validationRule);
+						_validationRuleByType[validationRule.type] = validationRule;
+					}
 				}
 			}
 		};

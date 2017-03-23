@@ -5601,18 +5601,6 @@ oids['pbeWithSHAAnd128BitRC2-CBC'] = '1.2.840.113549.1.12.1.5';
 oids['1.2.840.113549.1.12.1.6'] = 'pbewithSHAAnd40BitRC2-CBC';
 oids['pbewithSHAAnd40BitRC2-CBC'] = '1.2.840.113549.1.12.1.6';
 
-// hmac OIDs
-oids['1.2.840.113549.2.7'] = 'hmacWithSHA1';
-oids['hmacWithSHA1'] = '1.2.840.113549.2.7';
-oids['1.2.840.113549.2.8'] = 'hmacWithSHA224';
-oids['hmacWithSHA224'] = '1.2.840.113549.2.8';
-oids['1.2.840.113549.2.9'] = 'hmacWithSHA256';
-oids['hmacWithSHA256'] = '1.2.840.113549.2.9';
-oids['1.2.840.113549.2.10'] = 'hmacWithSHA384';
-oids['hmacWithSHA384'] = '1.2.840.113549.2.10';
-oids['1.2.840.113549.2.11'] = 'hmacWithSHA512';
-oids['hmacWithSHA512'] = '1.2.840.113549.2.11';
-
 // symmetric key algorithm oids
 oids['1.2.840.113549.3.7'] = 'des-EDE3-CBC';
 oids['des-EDE3-CBC'] = '1.2.840.113549.3.7';
@@ -5678,9 +5666,7 @@ oids['2.5.29.28'] = 'issuingDistributionPoint';
 oids['2.5.29.29'] = 'certificateIssuer';
 oids['2.5.29.30'] = 'nameConstraints';
 oids['2.5.29.31'] = 'cRLDistributionPoints';
-oids['cRLDistributionPoints'] = '2.5.29.31';
 oids['2.5.29.32'] = 'certificatePolicies';
-oids['certificatePolicies'] = '2.5.29.32';
 oids['2.5.29.33'] = 'policyMappings';
 oids['2.5.29.34'] = 'policyConstraints'; // deprecated use .36
 oids['2.5.29.35'] = 'authorityKeyIdentifier';
@@ -5692,10 +5678,6 @@ oids['2.5.29.46'] = 'freshestCRL';
 oids['2.5.29.54'] = 'inhibitAnyPolicy';
 
 // extKeyUsage purposes
-oids['1.3.6.1.4.1.11129.2.4.2'] = 'timestampList';
-oids['timestampList'] = '1.3.6.1.4.1.11129.2.4.2';
-oids['1.3.6.1.5.5.7.1.1'] = 'authorityInfoAccess';
-oids['authorityInfoAccess'] = '1.3.6.1.5.5.7.1.1';
 oids['1.3.6.1.5.5.7.3.1'] = 'serverAuth';
 oids['serverAuth'] = '1.3.6.1.5.5.7.3.1';
 oids['1.3.6.1.5.5.7.3.2'] = 'clientAuth';
@@ -6187,19 +6169,7 @@ asn1.toDer = function(obj) {
         value.putInt16(obj.value.charCodeAt(i));
       }
     } else {
-      // ensure integer is minimally-encoded
-      if(obj.type === asn1.Type.INTEGER &&
-        obj.value.length > 1 &&
-        // leading 0x00 for positive integer
-        ((obj.value.charCodeAt(0) === 0 &&
-        (obj.value.charCodeAt(1) & 0x80) === 0) ||
-        // leading 0xFF for negative integer
-        (obj.value.charCodeAt(0) === 0xFF &&
-        (obj.value.charCodeAt(1) & 0x80) === 0x80))) {
-        value.putBytes(obj.value.substr(1));
-      } else {
-        value.putBytes(obj.value);
-      }
+      value.putBytes(obj.value);
     }
   }
 
@@ -7090,16 +7060,16 @@ sha1.create = function() {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
+    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next >>> 0;
+      bits = next;
     }
-    finalBlock.putInt32(bits);
 
     var s2 = {
       h0: _state.h0,
@@ -7168,8 +7138,7 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
       d = c;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      c = ((b << 30) | (b >>> 2)) >>> 0;
+      c = (b << 30) | (b >>> 2);
       b = a;
       a = t;
     }
@@ -7181,8 +7150,7 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
       d = c;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      c = ((b << 30) | (b >>> 2)) >>> 0;
+      c = (b << 30) | (b >>> 2);
       b = a;
       a = t;
     }
@@ -7195,8 +7163,7 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
       d = c;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      c = ((b << 30) | (b >>> 2)) >>> 0;
+      c = (b << 30) | (b >>> 2);
       b = a;
       a = t;
     }
@@ -7208,8 +7175,7 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
       d = c;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      c = ((b << 30) | (b >>> 2)) >>> 0;
+      c = (b << 30) | (b >>> 2);
       b = a;
       a = t;
     }
@@ -7222,8 +7188,7 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x8F1BBCDC + t;
       e = d;
       d = c;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      c = ((b << 30) | (b >>> 2)) >>> 0;
+      c = (b << 30) | (b >>> 2);
       b = a;
       a = t;
     }
@@ -7236,8 +7201,7 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0xCA62C1D6 + t;
       e = d;
       d = c;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      c = ((b << 30) | (b >>> 2)) >>> 0;
+      c = (b << 30) | (b >>> 2);
       b = a;
       a = t;
     }
@@ -7471,16 +7435,16 @@ sha256.create = function() {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
+    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next >>> 0;
+      bits = next;
     }
-    finalBlock.putInt32(bits);
 
     var s2 = {
       h0: _state.h0,
@@ -7613,15 +7577,11 @@ function _update(s, w, bytes) {
       h = g;
       g = f;
       f = e;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      // can't truncate with `| 0`
-      e = (d + t1) >>> 0;
+      e = (d + t1) | 0;
       d = c;
       c = b;
       b = a;
-      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
-      // can't truncate with `| 0`
-      a = (t1 + t2) >>> 0;
+      a = (t1 + t2) | 0;
     }
 
     // update hash state
@@ -7895,16 +7855,16 @@ sha512.create = function(algorithm) {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
+    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next >>> 0;
+      bits = next;
     }
-    finalBlock.putInt32(bits);
 
     var h = new Array(_h.length);
     for(var i = 0; i < _h.length; ++i) {
@@ -12604,19 +12564,7 @@ function _bnToBytes(b) {
   if(hex[0] >= '8') {
     hex = '00' + hex;
   }
-  var bytes = forge.util.hexToBytes(hex);
-
-  // ensure integer is minimally-encoded
-  if(bytes.length > 1 &&
-    // leading 0x00 for positive integer
-    ((bytes.charCodeAt(0) === 0 &&
-    (bytes.charCodeAt(1) & 0x80) === 0) ||
-    // leading 0xFF for negative integer
-    (bytes.charCodeAt(0) === 0xFF &&
-    (bytes.charCodeAt(1) & 0x80) === 0x80))) {
-    return bytes.substr(1);
-  }
-  return bytes;
+  return forge.util.hexToBytes(hex);
 }
 
 /**
@@ -13356,7 +13304,7 @@ define("connectsdk.Util", ["connectsdk.core"], function(connectsdk) {
 			return {
 				screenSize : window.innerWidth + "x" + window.innerHeight,
 				platformIdentifier : window.navigator.userAgent,
-				sdkIdentifier : ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.0.1',
+				sdkIdentifier : ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.1.0',
 				sdkCreator: 'Ingenico'
 			};
 		};
@@ -14339,20 +14287,41 @@ define("connectsdk.ValidationRuleEmailAddress", ["connectsdk.core"], function(co
 	connectsdk.ValidationRuleEmailAddress = ValidationRuleEmailAddress;
 	return ValidationRuleEmailAddress;
 });
-define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression"], function(connectsdk, ValidationRuleEmailAddress, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression) {
+define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"], function(connectsdk) {
 
-	var ValidationRuleFactory = function () {
-	    
-	    this.makeValidator = function(json) {
-            // create new class based on the rule
-            var classType = json.type.charAt(0).toUpperCase() + json.type.slice(1), // camel casing
-                className = eval("ValidationRule" + classType);
-            return new className(json);
-        };
+	var ValidationRuleBoletoBancarioRequiredness = function (json) {
+		this.json = json;
+        this.type = json.type,
+        this.errorMessageId = json.type;
+        this.fiscalNumberLength = json.attributes.fiscalNumberLength;
+		
+		this.validate = function (value, fiscalNumberValue) {
+			return (fiscalNumberValue.length === this.fiscalNumberLength && value.length > 0) || fiscalNumberValue.length !== this.fiscalNumberLength;
+		};
 	};
 
-	connectsdk.ValidationRuleFactory = ValidationRuleFactory;
-	return ValidationRuleFactory;
+	connectsdk.ValidationRuleBoletoBancarioRequiredness = ValidationRuleBoletoBancarioRequiredness;
+	return ValidationRuleBoletoBancarioRequiredness;
+});
+define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleBoletoBancarioRequiredness"], function (connectsdk, ValidationRuleEmailAddress, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleBoletoBancarioRequiredness) {
+
+    var ValidationRuleFactory = function () {
+
+        this.makeValidator = function (json) {
+            // create new class based on the rule
+            try {
+                var classType = json.type.charAt(0).toUpperCase() + json.type.slice(1), // camel casing
+                    className = eval("ValidationRule" + classType);
+                return new className(json);
+            } catch (e) {
+                void 0;
+            }
+            return null;
+        };
+    };
+
+    connectsdk.ValidationRuleFactory = ValidationRuleFactory;
+    return ValidationRuleFactory;
 });
 define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleFactory"], function(connectsdk, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleEmailAddress, ValidationRuleFactory) {
 
@@ -14363,8 +14332,10 @@ define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.Validation
 			if (_json.validators) {
 				for (var key in _json.validators) {
 					var validationRule = validationRuleFactory.makeValidator({type: key, attributes: _json.validators[key]});
-					_validationRules.push(validationRule);
-					_validationRuleByType[validationRule.type] = validationRule;
+					if (validationRule) {
+						_validationRules.push(validationRule);
+						_validationRuleByType[validationRule.type] = validationRule;
+					}
 				}
 			}
 		};
