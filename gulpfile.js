@@ -3,7 +3,6 @@ var gulp = require('gulp')
 	, uglify = require('gulp-uglify')
 	, usemin = require('gulp-usemin')
 	, rimraf = require('gulp-rimraf')
-	, stripDebug = require('gulp-strip-debug')
 	, sourcemaps = require('gulp-sourcemaps')
 	, replace = require('gulp-replace')
 	, plumber = require('gulp-plumber')
@@ -31,7 +30,9 @@ var gulp = require('gulp')
 		"src/promise.js",
 		"src/net.js",
 		"src/util.js",
+		"src/AndroidPay.js",
 		"src/PublicKeyResponse.js",
+		"src/PaymentProductPublicKeyResponse.js",
 		"src/C2SCommunicatorConfiguration.js",
 		"src/IinDetailsResponse.js",
 		"src/C2SCommunicator.js",
@@ -76,7 +77,9 @@ var gulp = require('gulp')
 		"src/promise.js",
 		"src/net.js",
 		"src/util.js",
+		"src/AndroidPay.js",
 		"src/PublicKeyResponse.js",
+		"src/PaymentProductPublicKeyResponse.js",
 		"src/C2SCommunicatorConfiguration.js",
 		"src/IinDetailsResponse.js",
 		"src/C2SCommunicator.js",
@@ -123,7 +126,6 @@ gulp.task('createFullSdk', function () {
 		.pipe(sourcemaps.init())
 		.pipe(concat('connectsdk.js'))
 		.pipe(replace(/\$\{version\}/g, VERSION))
-		.pipe(stripDebug())
 		.pipe(gulp.dest('./dist/'))
 		.pipe(concat('connectsdk.min.js'))
 		.pipe(uglify())
@@ -136,7 +138,6 @@ gulp.task('createSdkNoEncryption', function () {
 		.pipe(sourcemaps.init())
 		.pipe(concat('connectsdk.noEncrypt.js'))
 		.pipe(replace(/\$\{version\}/g, VERSION))
-		.pipe(stripDebug())
 		.pipe(gulp.dest('./dist/'))
 		.pipe(concat('connectsdk.noEncrypt.min.js'))
 		.pipe(uglify())
@@ -149,4 +150,8 @@ gulp.task('clean', function (cb) {
 	return gulp.src('./dist', { read: false }).pipe(plumber()).pipe(rimraf());
 });
 
-gulp.task('default', ['createFullSdk', 'createSdkNoEncryption']);
+gulp.task('build', ['createFullSdk', 'createSdkNoEncryption']);
+
+gulp.task('default', function () {
+    console.error('no default task! use gulp --tasks');
+});

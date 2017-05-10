@@ -3,7 +3,9 @@ define("connectsdk.PaymentProductFieldDisplayHints", ["connectsdk.core", "connec
 	var PaymentProductFieldDisplayHints = function (json) {
 		this.json = json;
  		this.displayOrder = json.displayOrder;
-		this.formElement = new FormElement(json.formElement);
+		if (json.formElement) {
+			this.formElement = new FormElement(json.formElement);
+		}
 		this.label = json.label;
 		this.mask = json.mask;
 		this.obfuscate = json.obfuscate;

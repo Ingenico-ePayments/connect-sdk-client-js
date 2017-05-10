@@ -126,7 +126,8 @@ package "client API response wrappers" <<Rect>> {
 		+DisplayHints displayHints
 		+DataRestrictions dataRestrictions
 		+Array<String> getErrorCodes(String value)
-		+Boolean isValid(String value)
+		+<strike>Boolean isValid(String value)</strike>
+		+Boolean isValid(PaymentRequest request)
 		+String applyMask(String newValue, String oldValue)
 		+String applyWildcardMask(String newValue, String oldValue)
 		+String removeMask(String value)
@@ -163,7 +164,8 @@ package "client API response wrappers" <<Rect>> {
 		+JSON json
 		+String errorMessageId
 		+String type
-		+Boolean validate(String value)
+		+<strike>Boolean validate(String value)</strike>
+		+Boolean validate(PaymentRequest request, String fieldId)
 	}
 
     class ValidationRuleFactory #f2f2f2 {

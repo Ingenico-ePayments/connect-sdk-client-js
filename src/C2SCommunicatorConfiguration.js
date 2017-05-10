@@ -57,12 +57,12 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
                             }
                             ,DEV_ISC: {
                                 EU: {
-                                    API: "http://api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
+                                    API: "//api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
                                 }
                                 ,US: {
-                                    API: "http://api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
+                                    API: "//api.gc-ci-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-ci-dev.isaac.local"
                                 }
                             }
                         };

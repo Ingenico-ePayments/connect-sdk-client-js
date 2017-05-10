@@ -478,59 +478,245 @@ define('connectsdk.net', ['connectsdk.core'], function(connectsdk) {
   connectsdk.net = net;
   return net;
 });
-define("connectsdk.Util", ["connectsdk.core"], function(connectsdk) {
+define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 
-	var Util = function() {
-		this.getMetadata = function() {
+	// Create a singleton from Util so the same util function can be used in different modules
+	var Util = (function () {
+		var instance;
+
+		function createInstance() {
+			// private variables to use in the public methods
+			var applePayPaymentProductId = 302;
+			var androidPayPaymentProductId = 320;
+
 			return {
-				screenSize : window.innerWidth + "x" + window.innerHeight,
-				platformIdentifier : window.navigator.userAgent,
-				sdkIdentifier : ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.1.0',
-				sdkCreator: 'Ingenico'
-			};
-		};
+				applePayPaymentProductId: applePayPaymentProductId,
+				androidPayPaymentProductId: androidPayPaymentProductId,
+				getMetadata: function () {
+					return {
+						screenSize: window.innerWidth + "x" + window.innerHeight,
+						platformIdentifier: window.navigator.userAgent,
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.2.0',
+						sdkCreator: 'Ingenico'
+					};
+				},
+				base64Encode: function (data) {
+					if (typeof data === "object") {
+						try {
+							data = JSON.stringify(data);
+						} catch (e) {
+							throw "data must be either a String or a JSON object";
+						}
+					}
 
-		this.base64Encode = function(data) {
-			if (typeof data === "object") {
-				try {
-					data = JSON.stringify(data);
-				} catch (e) {
-					throw "data must be either a String or a JSON object";
+					var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+					var o1, o2, o3, h1, h2, h3, h4, bits, i = 0, ac = 0, enc = '', tmp_arr = [];
+
+					if (!data) {
+						return data;
+					}
+
+					do {// pack three octets into four hexets
+						o1 = data.charCodeAt(i++);
+						o2 = data.charCodeAt(i++);
+						o3 = data.charCodeAt(i++);
+
+						bits = o1 << 16 | o2 << 8 | o3;
+
+						h1 = bits >> 18 & 0x3f;
+						h2 = bits >> 12 & 0x3f;
+						h3 = bits >> 6 & 0x3f;
+						h4 = bits & 0x3f;
+
+						// use hexets to index into b64, and append result to encoded string
+						tmp_arr[ac++] = b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);
+					} while (i < data.length);
+
+					enc = tmp_arr.join('');
+
+					var r = data.length % 3;
+
+					return (r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
+				},
+				filterOutProductsThatAreNotSupportedInThisBrowser: function (json) {
+					for (var i = json.paymentProducts.length - 1, il = 0; i >= il; i--) {
+						var product = json.paymentProducts[i];
+						if (product && this.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(product.id) > -1) {
+							json.paymentProducts.splice(i, 1);
+						}
+					}
+				},
+				paymentProductsThatAreNotSupportedInThisBrowser: [applePayPaymentProductId]
+			}
+		}
+
+		return {
+			getInstance: function () {
+				if (!instance) {
+					instance = createInstance();
 				}
+				return instance;
 			}
-
-			var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-			var o1, o2, o3, h1, h2, h3, h4, bits, i = 0, ac = 0, enc = '', tmp_arr = [];
-
-			if (!data) {
-				return data;
-			}
-
-			do {// pack three octets into four hexets
-				o1 = data.charCodeAt(i++);
-				o2 = data.charCodeAt(i++);
-				o3 = data.charCodeAt(i++);
-
-				bits = o1 << 16 | o2 << 8 | o3;
-
-				h1 = bits >> 18 & 0x3f;
-				h2 = bits >> 12 & 0x3f;
-				h3 = bits >> 6 & 0x3f;
-				h4 = bits & 0x3f;
-
-				// use hexets to index into b64, and append result to encoded string
-				tmp_arr[ac++] = b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);
-			} while (i < data.length);
-
-			enc = tmp_arr.join('');
-
-			var r = data.length % 3;
-
-			return ( r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
 		};
-	};
+	})();
+
 	connectsdk.Util = Util;
 	return Util;
+});
+define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "connectsdk.Util"], function (connectsdk, Promise, Util) {
+
+    var _util = Util.getInstance();
+    var _C2SCommunicator = null;
+    var _paymentProductSpecificInputs = null;
+    var _context = null;
+
+    var setupRequestMethodData = function (networks, publicKey) {
+        var androidPayEnvironment = 'TEST';
+        if (_context.environment === 'PROD') {
+            androidPayEnvironment = 'PROD';
+        }
+        var methodData = [{
+            supportedMethods: ['https://android.com/pay'],
+            data: {
+                merchantId: _paymentProductSpecificInputs.androidPay.merchantId,
+                environment: androidPayEnvironment,
+                allowedCardNetworks: networks,
+                paymentMethodTokenizationParameters: {
+                    tokenizationType: 'NETWORK_TOKEN',
+                    parameters: {
+                        'publicKey': publicKey
+                    }
+                }
+            }
+        }];
+        return methodData;
+    }
+
+    var setupRequestDetails = function () {
+        var totalAmount = (_context.totalAmount / 100).toFixed(2);
+
+        var details = {
+            total: {
+                label: 'Total',
+                amount: {
+                    currency: 'USD',
+                    value: totalAmount
+                }
+            }
+        };
+        return details;
+    }
+
+    var setupRequestOptions = function () {
+        var options = {
+            requestShipping: false,
+            requestPayerEmail: false,
+            requestPayerPhone: false,
+            requestPayerName: false
+        };
+        return options;
+    }
+
+    var _doCanMakePayment = function (jsonNetworks, jsonPublicKey) {
+        var promise = new Promise();
+
+        var methodData = setupRequestMethodData(jsonNetworks.networks, jsonPublicKey.publicKey);
+        var details = setupRequestDetails();
+        var options = setupRequestOptions();
+        var request = new PaymentRequest(methodData, details, options);
+        setTimeout(function () {
+            // When the PRAPI is available, it does not mean the canMakePayment() method is also implemented.
+            if (request.canMakePayment) {
+                request.canMakePayment().then(function (result) {
+                    if (result) {
+                        promise.resolve(true);
+                    } else {
+                        promise.resolve(false);
+                    }
+                }).catch(function (error) {
+                    promise.reject(error);
+                });
+            } else {
+                promise.resolve(true);
+            }
+        });
+        return promise;
+    }
+
+    var _checkPaymentProductPublicKey = function () {
+        var promise = new Promise();
+        _C2SCommunicator.getPaymentProductPublicKey(_util.androidPayPaymentProductId).then(function (jsonPublicKey) {
+            promise.resolve(jsonPublicKey);
+        }, function () {
+            promise.reject();
+        });
+        return promise;
+    }
+
+    var _checkPaymentProductNetworks = function () {
+        var promise = new Promise();
+        _C2SCommunicator.getPaymentProductNetworks(_util.androidPayPaymentProductId, _context).then(function (jsonNetworks) {
+            if (jsonNetworks.networks && jsonNetworks.networks.length > 0) {
+                promise.resolve(jsonNetworks);
+            } else {
+                promise.reject();
+            }
+        }, function () {
+            promise.reject();
+        });
+        return promise;
+    }
+
+    var _isPaymentRequestAPIAvailable = function () {
+        return window && window.PaymentRequest;
+    }
+
+    this.AndroidPay = function (C2SCommunicator) {
+        _C2SCommunicator = C2SCommunicator;
+        this.isAndroidPayAvailable = function (context, paymentProductSpecificInputs) {
+            _context = context;
+            _paymentProductSpecificInputs = paymentProductSpecificInputs;
+            var promise = new Promise();
+            setTimeout(function () {
+                if (_isPaymentRequestAPIAvailable()) {
+                    _checkPaymentProductNetworks().then(function (jsonNetworks) {
+                        _checkPaymentProductPublicKey().then(function (jsonPublicKey) {
+                            _doCanMakePayment(jsonNetworks, jsonPublicKey).then(function (isAndroidPayAvailable) {
+                                if (!isAndroidPayAvailable) {
+                                    _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                                }
+                                promise.resolve(isAndroidPayAvailable);
+                            }, function () {
+                                _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                                promise.reject('failed to run canMakePayment() check with the payment request API');
+                            });
+                        }, function () {
+                            _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                            promise.reject('failed to retrieve payment product publickey');
+                        });
+                    }, function () {
+                        _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                        promise.reject('failed to retrieve paymentproduct networks');
+                    });
+                } else {
+                    _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                    promise.reject('Payment Request API is not available');
+                }
+            });
+            return promise;
+        }
+
+        this.isMerchantIdProvided = function (paymentProductSpecificInputs) {
+            if (paymentProductSpecificInputs.androidPay.merchantId) {
+                return paymentProductSpecificInputs.androidPay.merchantId;
+            } else {
+                _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                return false;
+            }
+        }
+    };
+    connectsdk.AndroidPay = AndroidPay;
+    return AndroidPay;
 });
 define("connectsdk.PublicKeyResponse", ["connectsdk.core"], function(connectsdk) {
 
@@ -542,6 +728,17 @@ define("connectsdk.PublicKeyResponse", ["connectsdk.core"], function(connectsdk)
 
 	connectsdk.PublicKeyResponse = PublicKeyResponse;
 	return PublicKeyResponse;
+});
+define("connectsdk.PaymentProductPublicKeyResponse", ["connectsdk.core"], function(connectsdk) {
+
+	var PaymentProductPublicKeyResponse = function(json) {
+		this.json = json;
+		this.keyId = json.keyId;
+		this.publicKey = json.publicKey;
+	};
+
+	connectsdk.PaymentProductPublicKeyResponse = PaymentProductPublicKeyResponse;
+	return PaymentProductPublicKeyResponse;
 });
 define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(connectsdk) {
 
@@ -602,12 +799,12 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
                             }
                             ,DEV_ISC: {
                                 EU: {
-                                    API: "http://api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
+                                    API: "//api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
                                 }
                                 ,US: {
-                                    API: "http://api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
+                                    API: "//api.gc-ci-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-ci-dev.isaac.local"
                                 }
                             }
                         };
@@ -635,14 +832,14 @@ define("connectsdk.IinDetailsResponse", ["connectsdk.core", "connectsdk.promise"
 	connectsdk.IinDetailsResponse = IinDetailsResponse;
 	return IinDetailsResponse;
 });
-define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse) {
+define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.PaymentProductPublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.AndroidPay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, PaymentProductPublicKeyResponse, IinDetailsResponse, AndroidPay) {
 	var C2SCommunicator = function (c2SCommunicatorConfiguration, paymentProduct) {
 		var _c2SCommunicatorConfiguration = c2SCommunicatorConfiguration;
-		var _util = new Util();
+		var _util = Util.getInstance();
 		var _cache = {};
 		var _providedPaymentProduct = paymentProduct;
 		var that = this;
-		var _removedPaymentProductIds = [302, 320];
+		var _AndroidPay = new AndroidPay(that);
 
 		var _mapType = {
 			"expirydate": "tel",
@@ -656,12 +853,13 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
 				field.type = (field.displayHints.obfuscate) ? "password" : _mapType[field.type];
+
 				// helper code for templating tools like Handlebars
 				for (validatorKey in field.dataRestrictions.validators) {
 					field.validators = field.validators || [];
 					field.validators.push(validatorKey);
 				}
-				if (field.displayHints.formElement.type === 'list') {
+				if (field.displayHints.formElement && field.displayHints.formElement.type === 'list') {
 					field.displayHints.formElement.list = true;
 				}
 
@@ -670,7 +868,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					field.displayHints.tooltip.image = url + "/" + field.displayHints.tooltip.image;
 				}
 			}
-			// apply sortorder
+			// The server orders in a different way, so we apply the sortorder
 			json.fields.sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
 					return -1;
@@ -681,16 +879,6 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			json.displayHints.logo = url + "/" + json.displayHints.logo;
 			return json;
 		};
-
-		var _removeProducts = function (json) {
-			for (var i = json.paymentProducts.length - 1, il = 0; i >= il; i--) {
-				var product = json.paymentProducts[i];
-				if (product && _removedPaymentProductIds.indexOf(product.id) > -1) {
-					json.paymentProducts.splice(i, 1);
-				}
-			}
-			return json;
-		}
 
 		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
@@ -706,9 +894,20 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return json;
 		};
 
+		var _isPaymentProductInList = function (list, paymentProductId) {
+			for (var i = list.length - 1, il = 0; i >= il; i--) {
+				var product = list[i];
+				if (product && (product.id === paymentProductId)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		var metadata = _util.getMetadata();
 
-		this.getBasicPaymentProducts = function (context) {
+		this.getBasicPaymentProducts = function (context, paymentProductSpecificInputs) {
+			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
@@ -728,11 +927,39 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.end(function (res) {
 						if (res.success) {
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
-							json = _removeProducts(json);
-							_cache[cacheKey] = json;
-							promise.resolve(json);
+							if (_isPaymentProductInList(json.paymentProducts, _util.androidPayPaymentProductId)) {
+								if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+									_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+										if (json.paymentProducts.length === 0) {
+											promise.reject('No payment products available');
+										}
+										_cache[cacheKey] = json;
+										promise.resolve(json);
+									}, function () {
+										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+										if (json.paymentProducts.length === 0) {
+											promise.reject('No payment products available');
+										}
+										_cache[cacheKey] = json;
+										promise.resolve(json);
+									});
+								} else {
+									//AndroidPay does not have merchantId 
+									_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+									console.warn('You have not provided a merchantId for Android Pay, you can set this in the paymentProductSpecificInputs object');
+									promise.resolve(json);
+								}
+							} else {
+								_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+								if (json.paymentProducts.length === 0) {
+									promise.reject('No payment products available');
+								}
+								_cache[cacheKey] = json;
+								promise.resolve(json);
+							}
 						} else {
-							promise.reject();
+							promise.reject('failed to retrieve Basic Payment Products', res);
 						}
 					});
 			}
@@ -769,14 +996,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function (paymentProductId, context) {
+		this.getPaymentProduct = function (paymentProductId, context, paymentProductSpecificInputs) {
+			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
 					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
 					+ context.currency;
-
-			if (_removedPaymentProductIds.indexOf(paymentProductId) > -1) {
+			if (_util.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(paymentProductId) > -1) {
 				setTimeout(function () {
 					promise.reject({
 						"errorId": "48b78d2d-1b35-4f8b-92cb-57cc2638e901",
@@ -815,10 +1042,33 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.end(function (res) {
 							if (res.success) {
 								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
-								_cache[cacheKey] = cleanedJSON;
-								promise.resolve(cleanedJSON);
+								if (paymentProductId === _util.androidPayPaymentProductId) {
+									if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+										_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+											if (isAndroidPayAvailable) {
+												_cache[cacheKey] = cleanedJSON;
+												promise.resolve(cleanedJSON);
+											} else {
+												_cache[cacheKey] = cleanedJSON;
+												//_isAndroidPayAvailable returned false so android pay is not available, so reject getPaymentProduct
+												promise.reject(cleanedJSON);
+											}
+										}, function () {
+											_cache[cacheKey] = cleanedJSON;
+											//_isAndroidPayAvailable rejected so not available
+											promise.reject(cleanedJSON);
+										});
+									} else {
+										_cache[cacheKey] = cleanedJSON;
+										// merchantId is not provided so reject
+										promise.reject(cleanedJSON);
+									}
+								} else {
+									_cache[cacheKey] = cleanedJSON;
+									promise.resolve(cleanedJSON);
+								}
 							} else {
-								promise.reject(res);
+								promise.reject('failed to retrieve Payment Product', res);
 							}
 						});
 				}
@@ -970,6 +1220,58 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							promise.resolve(publicKeyResponse);
 						} else {
 							promise.reject("unable to get public key");
+						}
+					});
+			}
+			return promise;
+		};
+
+		this.getPaymentProductPublicKey = function (paymentProductId) {
+			var promise = new Promise()
+				, cacheKey = "paymentProductPublicKey";
+
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
+					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							var paymentProductPublicKeyResponse = new PaymentProductPublicKeyResponse(res.responseJSON);
+							_cache[cacheKey] = paymentProductPublicKeyResponse;
+							promise.resolve(paymentProductPublicKeyResponse);
+						} else {
+							promise.reject("unable to get payment product public key");
+						}
+					});
+			}
+			return promise;
+		}
+
+		this.getPaymentProductNetworks = function (paymentProductId, context) {
+			var promise = new Promise()
+				, cacheKey = "paymentProductNetworks-" + paymentProductId + "_" + context.countryCode + "_" + context.currency + "_"
+					+ context.totalAmount + "_" + context.isRecurring;
+
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+					+ "/products/" + paymentProductId + "/networks" + "?countryCode=" + context.countryCode + "&currencyCode=" + context.currency
+					+ "&amount=" + context.totalAmount + "&isRecurring=" + context.isRecurring)
+					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							_cache[cacheKey] = res.responseJSON;
+							promise.resolve(res.responseJSON);
+						} else {
+							promise.reject();
 						}
 					});
 			}
@@ -1495,7 +1797,7 @@ define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.Valid
                     className = eval("ValidationRule" + classType);
                 return new className(json);
             } catch (e) {
-                void 0;
+                console.warn('no validator for ', classType);
             }
             return null;
         };
@@ -1581,7 +1883,9 @@ define("connectsdk.PaymentProductFieldDisplayHints", ["connectsdk.core", "connec
 	var PaymentProductFieldDisplayHints = function (json) {
 		this.json = json;
  		this.displayOrder = json.displayOrder;
-		this.formElement = new FormElement(json.formElement);
+		if (json.formElement) {
+			this.formElement = new FormElement(json.formElement);
+		}
 		this.label = json.label;
 		this.mask = json.mask;
 		this.obfuscate = json.obfuscate;
@@ -2119,10 +2423,10 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
 		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
 
-		this.getBasicPaymentProducts = function(paymentRequestPayload) {
+		this.getBasicPaymentProducts = function(paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
-			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext).then(function (json) {
+			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext, paymentProductSpecificInputs).then(function (json) {			
 				_paymentRequestPayload = paymentRequestPayload;
 				var paymentProducts = new BasicPaymentProducts(json);
 				promise.resolve(paymentProducts);
@@ -2145,11 +2449,11 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups) {
+		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			// get products & groups
 			if (useGroups) {
-				_session.getBasicPaymentProducts(paymentRequestPayload).then(function (products) {
+				_session.getBasicPaymentProducts(paymentRequestPayload, paymentProductSpecificInputs).then(function (products) {
 					_session.getBasicPaymentProductGroups(paymentRequestPayload).then(function (groups) {
 						var basicPaymentItems = new BasicPaymentItems(products, groups);
 						promise.resolve(basicPaymentItems);
@@ -2160,7 +2464,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 					promise.reject();
 				});
 			} else {
-				_session.getBasicPaymentProducts(paymentRequestPayload).then(function (products) {
+				_session.getBasicPaymentProducts(paymentRequestPayload, paymentProductSpecificInputs).then(function (products) {
 					var basicPaymentItems = new BasicPaymentItems(products, null);
 					promise.resolve(basicPaymentItems);
 				}, function () {
@@ -2170,11 +2474,11 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function(paymentProductId, paymentRequestPayload) {
+		this.getPaymentProduct = function(paymentProductId, paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			_paymentProductId = paymentProductId;
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
-			_c2sCommunicator.getPaymentProduct(paymentProductId, c2SPaymentProductContext).then(function (response) {
+			_c2sCommunicator.getPaymentProduct(paymentProductId, c2SPaymentProductContext, paymentProductSpecificInputs).then(function (response) {
 				_paymentProduct = new PaymentProduct(response);
 				promise.resolve(_paymentProduct);
 			}, function () {
@@ -2208,6 +2512,20 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return _c2sCommunicator.getPublicKey();
 		};
 
+		this.getPaymentProductPublicKey = function (paymentProductId) {
+			return _c2sCommunicator.getPaymentProductPublicKey(paymentProductId);
+		};
+		this.getPaymentProductNetworks = function (paymentProductId, paymentRequestPayload) {
+			var promise = new Promise();
+			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
+			_c2sCommunicator.getPaymentProductNetworks(paymentProductId, c2SPaymentProductContext).then(function (response) {
+				_paymentRequestPayload = paymentRequestPayload;
+				promise.resolve(response);
+			}, function () {
+				promise.reject();
+			});
+			return promise;
+		};
 		this.getPaymentProductDirectory = function (paymentProductId, currencyCode, countryCode) {
 			return _c2sCommunicator.getPaymentProductDirectory(paymentProductId, currencyCode, countryCode);
 		};

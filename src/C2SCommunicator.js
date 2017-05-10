@@ -1,11 +1,11 @@
-define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse) {
+define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.PaymentProductPublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.AndroidPay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, PaymentProductPublicKeyResponse, IinDetailsResponse, AndroidPay) {
 	var C2SCommunicator = function (c2SCommunicatorConfiguration, paymentProduct) {
 		var _c2SCommunicatorConfiguration = c2SCommunicatorConfiguration;
-		var _util = new Util();
+		var _util = Util.getInstance();
 		var _cache = {};
 		var _providedPaymentProduct = paymentProduct;
 		var that = this;
-		var _removedPaymentProductIds = [302, 320];
+		var _AndroidPay = new AndroidPay(that);
 
 		var _mapType = {
 			"expirydate": "tel",
@@ -19,12 +19,13 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
 				field.type = (field.displayHints.obfuscate) ? "password" : _mapType[field.type];
+
 				// helper code for templating tools like Handlebars
 				for (validatorKey in field.dataRestrictions.validators) {
 					field.validators = field.validators || [];
 					field.validators.push(validatorKey);
 				}
-				if (field.displayHints.formElement.type === 'list') {
+				if (field.displayHints.formElement && field.displayHints.formElement.type === 'list') {
 					field.displayHints.formElement.list = true;
 				}
 
@@ -33,7 +34,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					field.displayHints.tooltip.image = url + "/" + field.displayHints.tooltip.image;
 				}
 			}
-			// apply sortorder
+			// The server orders in a different way, so we apply the sortorder
 			json.fields.sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
 					return -1;
@@ -44,16 +45,6 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			json.displayHints.logo = url + "/" + json.displayHints.logo;
 			return json;
 		};
-
-		var _removeProducts = function (json) {
-			for (var i = json.paymentProducts.length - 1, il = 0; i >= il; i--) {
-				var product = json.paymentProducts[i];
-				if (product && _removedPaymentProductIds.indexOf(product.id) > -1) {
-					json.paymentProducts.splice(i, 1);
-				}
-			}
-			return json;
-		}
 
 		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
@@ -69,9 +60,20 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return json;
 		};
 
+		var _isPaymentProductInList = function (list, paymentProductId) {
+			for (var i = list.length - 1, il = 0; i >= il; i--) {
+				var product = list[i];
+				if (product && (product.id === paymentProductId)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		var metadata = _util.getMetadata();
 
-		this.getBasicPaymentProducts = function (context) {
+		this.getBasicPaymentProducts = function (context, paymentProductSpecificInputs) {
+			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
@@ -91,11 +93,39 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.end(function (res) {
 						if (res.success) {
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
-							json = _removeProducts(json);
-							_cache[cacheKey] = json;
-							promise.resolve(json);
+							if (_isPaymentProductInList(json.paymentProducts, _util.androidPayPaymentProductId)) {
+								if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+									_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+										if (json.paymentProducts.length === 0) {
+											promise.reject('No payment products available');
+										}
+										_cache[cacheKey] = json;
+										promise.resolve(json);
+									}, function () {
+										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+										if (json.paymentProducts.length === 0) {
+											promise.reject('No payment products available');
+										}
+										_cache[cacheKey] = json;
+										promise.resolve(json);
+									});
+								} else {
+									//AndroidPay does not have merchantId 
+									_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+									console.warn('You have not provided a merchantId for Android Pay, you can set this in the paymentProductSpecificInputs object');
+									promise.resolve(json);
+								}
+							} else {
+								_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+								if (json.paymentProducts.length === 0) {
+									promise.reject('No payment products available');
+								}
+								_cache[cacheKey] = json;
+								promise.resolve(json);
+							}
 						} else {
-							promise.reject();
+							promise.reject('failed to retrieve Basic Payment Products', res);
 						}
 					});
 			}
@@ -132,14 +162,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function (paymentProductId, context) {
+		this.getPaymentProduct = function (paymentProductId, context, paymentProductSpecificInputs) {
+			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
 					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
 					+ context.currency;
-
-			if (_removedPaymentProductIds.indexOf(paymentProductId) > -1) {
+			if (_util.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(paymentProductId) > -1) {
 				setTimeout(function () {
 					promise.reject({
 						"errorId": "48b78d2d-1b35-4f8b-92cb-57cc2638e901",
@@ -178,10 +208,33 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.end(function (res) {
 							if (res.success) {
 								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
-								_cache[cacheKey] = cleanedJSON;
-								promise.resolve(cleanedJSON);
+								if (paymentProductId === _util.androidPayPaymentProductId) {
+									if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+										_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+											if (isAndroidPayAvailable) {
+												_cache[cacheKey] = cleanedJSON;
+												promise.resolve(cleanedJSON);
+											} else {
+												_cache[cacheKey] = cleanedJSON;
+												//_isAndroidPayAvailable returned false so android pay is not available, so reject getPaymentProduct
+												promise.reject(cleanedJSON);
+											}
+										}, function () {
+											_cache[cacheKey] = cleanedJSON;
+											//_isAndroidPayAvailable rejected so not available
+											promise.reject(cleanedJSON);
+										});
+									} else {
+										_cache[cacheKey] = cleanedJSON;
+										// merchantId is not provided so reject
+										promise.reject(cleanedJSON);
+									}
+								} else {
+									_cache[cacheKey] = cleanedJSON;
+									promise.resolve(cleanedJSON);
+								}
 							} else {
-								promise.reject(res);
+								promise.reject('failed to retrieve Payment Product', res);
 							}
 						});
 				}
@@ -333,6 +386,58 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							promise.resolve(publicKeyResponse);
 						} else {
 							promise.reject("unable to get public key");
+						}
+					});
+			}
+			return promise;
+		};
+
+		this.getPaymentProductPublicKey = function (paymentProductId) {
+			var promise = new Promise()
+				, cacheKey = "paymentProductPublicKey";
+
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
+					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							var paymentProductPublicKeyResponse = new PaymentProductPublicKeyResponse(res.responseJSON);
+							_cache[cacheKey] = paymentProductPublicKeyResponse;
+							promise.resolve(paymentProductPublicKeyResponse);
+						} else {
+							promise.reject("unable to get payment product public key");
+						}
+					});
+			}
+			return promise;
+		}
+
+		this.getPaymentProductNetworks = function (paymentProductId, context) {
+			var promise = new Promise()
+				, cacheKey = "paymentProductNetworks-" + paymentProductId + "_" + context.countryCode + "_" + context.currency + "_"
+					+ context.totalAmount + "_" + context.isRecurring;
+
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+					+ "/products/" + paymentProductId + "/networks" + "?countryCode=" + context.countryCode + "&currencyCode=" + context.currency
+					+ "&amount=" + context.totalAmount + "&isRecurring=" + context.isRecurring)
+					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							_cache[cacheKey] = res.responseJSON;
+							promise.resolve(res.responseJSON);
+						} else {
+							promise.reject();
 						}
 					});
 			}

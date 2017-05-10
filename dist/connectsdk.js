@@ -120,6 +120,21 @@ util.isArrayBufferView = function(x) {
   return x && util.isArrayBuffer(x.buffer) && x.byteLength !== undefined;
 };
 
+/**
+ * Ensure a bits param is 8, 16, 24, or 32. Used to validate input for
+ * algorithms where bit manipulation, JavaScript limitations, and/or algorithm
+ * design only allow for byte operations of a limited size.
+ *
+ * @param n number of bits.
+ *
+ * Throw Error if n invalid.
+ */
+function _checkBitsParam(n) {
+  if(!(n === 8 || n === 16 || n === 24 || n === 32)) {
+    throw new Error('Only 8, 16, 24, or 32 bits supported: ' + n);
+  }
+}
+
 // TODO: set ByteBuffer to best available backing
 util.ByteBuffer = ByteStringBuffer;
 
@@ -351,11 +366,12 @@ util.ByteStringBuffer.prototype.putInt32Le = function(i) {
  * Puts an n-bit integer in this buffer in big-endian order.
  *
  * @param i the n-bit integer.
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return this buffer.
  */
 util.ByteStringBuffer.prototype.putInt = function(i, n) {
+  _checkBitsParam(n);
   var bytes = '';
   do {
     n -= 8;
@@ -369,11 +385,12 @@ util.ByteStringBuffer.prototype.putInt = function(i, n) {
  * complement representation is used.
  *
  * @param i the n-bit integer.
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return this buffer.
  */
 util.ByteStringBuffer.prototype.putSignedInt = function(i, n) {
+  // putInt checks n
   if(i < 0) {
     i += 2 << (n - 1);
   }
@@ -492,15 +509,17 @@ util.ByteStringBuffer.prototype.getInt32Le = function() {
 
 /**
  * Gets an n-bit integer from this buffer in big-endian order and advances the
- * read pointer by n/8.
+ * read pointer by ceil(n/8).
  *
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return the integer.
  */
 util.ByteStringBuffer.prototype.getInt = function(n) {
+  _checkBitsParam(n);
   var rval = 0;
   do {
+    // TODO: Use (rval * 0x100) if adding support for 33 to 53 bits.
     rval = (rval << 8) + this.data.charCodeAt(this.read++);
     n -= 8;
   } while(n > 0);
@@ -511,11 +530,12 @@ util.ByteStringBuffer.prototype.getInt = function(n) {
  * Gets a signed n-bit integer from this buffer in big-endian order, using
  * two's complement, and advances the read pointer by n/8.
  *
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return the integer.
  */
 util.ByteStringBuffer.prototype.getSignedInt = function(n) {
+  // getInt checks n
   var x = this.getInt(n);
   var max = 2 << (n - 2);
   if(x >= max) {
@@ -1032,11 +1052,12 @@ util.DataBuffer.prototype.putInt32Le = function(i) {
  * Puts an n-bit integer in this buffer in big-endian order.
  *
  * @param i the n-bit integer.
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return this buffer.
  */
 util.DataBuffer.prototype.putInt = function(i, n) {
+  _checkBitsParam(n);
   this.accommodate(n / 8);
   do {
     n -= 8;
@@ -1055,6 +1076,7 @@ util.DataBuffer.prototype.putInt = function(i, n) {
  * @return this buffer.
  */
 util.DataBuffer.prototype.putSignedInt = function(i, n) {
+  _checkBitsParam(n);
   this.accommodate(n / 8);
   if(i < 0) {
     i += 2 << (n - 1);
@@ -1151,13 +1173,15 @@ util.DataBuffer.prototype.getInt32Le = function() {
  * Gets an n-bit integer from this buffer in big-endian order and advances the
  * read pointer by n/8.
  *
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return the integer.
  */
 util.DataBuffer.prototype.getInt = function(n) {
+  _checkBitsParam(n);
   var rval = 0;
   do {
+    // TODO: Use (rval * 0x100) if adding support for 33 to 53 bits.
     rval = (rval << 8) + this.data.getInt8(this.read++);
     n -= 8;
   } while(n > 0);
@@ -1168,11 +1192,12 @@ util.DataBuffer.prototype.getInt = function(n) {
  * Gets a signed n-bit integer from this buffer in big-endian order, using
  * two's complement, and advances the read pointer by n/8.
  *
- * @param n the number of bits in the integer.
+ * @param n the number of bits in the integer (8, 16, 24, or 32).
  *
  * @return the integer.
  */
 util.DataBuffer.prototype.getSignedInt = function(n) {
+  // getInt checks n
   var x = this.getInt(n);
   var max = 2 << (n - 2);
   if(x >= max) {
@@ -5601,6 +5626,18 @@ oids['pbeWithSHAAnd128BitRC2-CBC'] = '1.2.840.113549.1.12.1.5';
 oids['1.2.840.113549.1.12.1.6'] = 'pbewithSHAAnd40BitRC2-CBC';
 oids['pbewithSHAAnd40BitRC2-CBC'] = '1.2.840.113549.1.12.1.6';
 
+// hmac OIDs
+oids['1.2.840.113549.2.7'] = 'hmacWithSHA1';
+oids['hmacWithSHA1'] = '1.2.840.113549.2.7';
+oids['1.2.840.113549.2.8'] = 'hmacWithSHA224';
+oids['hmacWithSHA224'] = '1.2.840.113549.2.8';
+oids['1.2.840.113549.2.9'] = 'hmacWithSHA256';
+oids['hmacWithSHA256'] = '1.2.840.113549.2.9';
+oids['1.2.840.113549.2.10'] = 'hmacWithSHA384';
+oids['hmacWithSHA384'] = '1.2.840.113549.2.10';
+oids['1.2.840.113549.2.11'] = 'hmacWithSHA512';
+oids['hmacWithSHA512'] = '1.2.840.113549.2.11';
+
 // symmetric key algorithm oids
 oids['1.2.840.113549.3.7'] = 'des-EDE3-CBC';
 oids['des-EDE3-CBC'] = '1.2.840.113549.3.7';
@@ -5666,7 +5703,9 @@ oids['2.5.29.28'] = 'issuingDistributionPoint';
 oids['2.5.29.29'] = 'certificateIssuer';
 oids['2.5.29.30'] = 'nameConstraints';
 oids['2.5.29.31'] = 'cRLDistributionPoints';
+oids['cRLDistributionPoints'] = '2.5.29.31';
 oids['2.5.29.32'] = 'certificatePolicies';
+oids['certificatePolicies'] = '2.5.29.32';
 oids['2.5.29.33'] = 'policyMappings';
 oids['2.5.29.34'] = 'policyConstraints'; // deprecated use .36
 oids['2.5.29.35'] = 'authorityKeyIdentifier';
@@ -5678,6 +5717,10 @@ oids['2.5.29.46'] = 'freshestCRL';
 oids['2.5.29.54'] = 'inhibitAnyPolicy';
 
 // extKeyUsage purposes
+oids['1.3.6.1.4.1.11129.2.4.2'] = 'timestampList';
+oids['timestampList'] = '1.3.6.1.4.1.11129.2.4.2';
+oids['1.3.6.1.5.5.7.1.1'] = 'authorityInfoAccess';
+oids['authorityInfoAccess'] = '1.3.6.1.5.5.7.1.1';
 oids['1.3.6.1.5.5.7.3.1'] = 'serverAuth';
 oids['serverAuth'] = '1.3.6.1.5.5.7.3.1';
 oids['1.3.6.1.5.5.7.3.2'] = 'clientAuth';
@@ -5930,10 +5973,13 @@ asn1.Type = {
  * @param type the data type (tag number) for the object.
  * @param constructed true if the asn1 object is in constructed form.
  * @param value the value for the object, if it is not constructed.
+ * @param [options] the options to use:
+ *          [bitStringContents] the plain BIT STRING content including padding
+ *            byte.
  *
  * @return the asn1 object.
  */
-asn1.create = function(tagClass, type, constructed, value) {
+asn1.create = function(tagClass, type, constructed, value, options) {
   /* An asn1 object has a tagClass, a type, a constructed flag, and a
     value. The value's type depends on the constructed flag. If
     constructed, it will contain a list of other asn1 objects. If not,
@@ -5951,13 +5997,108 @@ asn1.create = function(tagClass, type, constructed, value) {
     value = tmp;
   }
 
-  return {
+  var obj = {
     tagClass: tagClass,
     type: type,
     constructed: constructed,
     composed: constructed || forge.util.isArray(value),
     value: value
   };
+  if(options && 'bitStringContents' in options) {
+    // TODO: copy byte buffer if it's a buffer not a string
+    obj.bitStringContents = options.bitStringContents;
+    // TODO: add readonly flag to avoid this overhead
+    // save copy to detect changes
+    obj.original = asn1.copy(obj);
+  }
+  return obj;
+};
+
+/**
+ * Copies an asn1 object.
+ *
+ * @param obj the asn1 object.
+ * @param [options] copy options:
+ *          [excludeBitStringContents] true to not copy bitStringContents
+ *
+ * @return the a copy of the asn1 object.
+ */
+asn1.copy = function(obj, options) {
+  var copy;
+
+  if(forge.util.isArray(obj)) {
+    copy = [];
+    for(var i = 0; i < obj.length; ++i) {
+      copy.push(asn1.copy(obj[i], options));
+    }
+    return copy;
+  }
+
+  if(typeof obj === 'string') {
+    // TODO: copy byte buffer if it's a buffer not a string
+    return obj;
+  }
+
+  copy = {
+    tagClass: obj.tagClass,
+    type: obj.type,
+    constructed: obj.constructed,
+    composed: obj.composed,
+    value: asn1.copy(obj.value, options)
+  };
+  if(options && !options.excludeBitStringContents) {
+    // TODO: copy byte buffer if it's a buffer not a string
+    copy.bitStringContents = obj.bitStringContents;
+  }
+  return copy;
+};
+
+/**
+ * Compares asn1 objects for equality.
+ *
+ * Note this function does not run in constant time.
+ *
+ * @param obj1 the first asn1 object.
+ * @param obj2 the second asn1 object.
+ * @param [options] compare options:
+ *          [includeBitStringContents] true to compare bitStringContents
+ *
+ * @return true if the asn1 objects are equal.
+ */
+asn1.equals = function(obj1, obj2, options) {
+  if(forge.util.isArray(obj1)) {
+    if(!forge.util.isArray(obj2)) {
+      return false;
+    }
+    if(obj1.length !== obj2.length) {
+      return false;
+    }
+    for(var i = 0; i < obj1.length; ++i) {
+      if(!asn1.equals(obj1[i], obj2[i])) {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  if(typeof obj1 !== typeof obj2) {
+    return false;
+  }
+
+  if(typeof obj1 === 'string') {
+    return obj1 === obj2;
+  }
+
+  var equal = obj1.tagClass === obj2.tagClass &&
+    obj1.type === obj2.type &&
+    obj1.constructed === obj2.constructed &&
+    obj1.composed === obj2.composed &&
+    asn1.equals(obj1.value, obj2.value);
+  if(options && options.includeBitStringContents) {
+    equal = equal && (obj1.bitStringContents === obj2.bitStringContents);
+  }
+
+  return equal;
 };
 
 /**
@@ -5970,7 +6111,7 @@ asn1.create = function(tagClass, type, constructed, value) {
  *
  * @return the length of the BER-encoded ASN.1 value or undefined.
  */
-var _getValueLength = asn1.getBerValueLength = function(b) {
+asn1.getBerValueLength = function(b) {
   // TODO: move this function and related DER/BER functions to a der.js
   // file; better abstract ASN.1 away from der/ber.
   var b2 = b.getByte();
@@ -5993,17 +6134,98 @@ var _getValueLength = asn1.getBerValueLength = function(b) {
 };
 
 /**
+ * Check if the byte buffer has enough bytes. Throws an Error if not.
+ *
+ * @param bytes the byte buffer to parse from.
+ * @param remaining the bytes remaining in the current parsing state.
+ * @param n the number of bytes the buffer must have.
+ */
+function _checkBufferLength(bytes, remaining, n) {
+  if(n > remaining) {
+    var error = new Error('Too few bytes to parse DER.');
+    error.available = bytes.length();
+    error.remaining = remaining;
+    error.requested = n;
+    throw error;
+  }
+}
+
+/**
+ * Gets the length of a BER-encoded ASN.1 value.
+ *
+ * In case the length is not specified, undefined is returned.
+ *
+ * @param bytes the byte buffer to parse from.
+ * @param remaining the bytes remaining in the current parsing state.
+ *
+ * @return the length of the BER-encoded ASN.1 value or undefined.
+ */
+var _getValueLength = function(bytes, remaining) {
+  // TODO: move this function and related DER/BER functions to a der.js
+  // file; better abstract ASN.1 away from der/ber.
+  // fromDer already checked that this byte exists
+  var b2 = bytes.getByte();
+  remaining--;
+  if(b2 === 0x80) {
+    return undefined;
+  }
+
+  // see if the length is "short form" or "long form" (bit 8 set)
+  var length;
+  var longForm = b2 & 0x80;
+  if(!longForm) {
+    // length is just the first byte
+    length = b2;
+  } else {
+    // the number of bytes the length is specified in bits 7 through 1
+    // and each length byte is in big-endian base-256
+    var longFormBytes = b2 & 0x7F;
+    _checkBufferLength(bytes, remaining, longFormBytes);
+    length = bytes.getInt(longFormBytes << 3);
+  }
+  // FIXME: this will only happen for 32 bit getInt with high bit set
+  if(length < 0) {
+    throw new Error('Negative length: ' + length);
+  }
+  return length;
+};
+
+/**
  * Parses an asn1 object from a byte buffer in DER format.
  *
  * @param bytes the byte buffer to parse from.
- * @param strict true to be strict when checking value lengths, false to
+ * @param [strict] true to be strict when checking value lengths, false to
  *          allow truncated values (default: true).
+ * @param [options] object with options or boolean strict flag
+ *          [strict] true to be strict when checking value lengths, false to
+ *            allow truncated values (default: true).
+ *          [decodeBitStrings] true to attempt to decode the content of
+ *            BIT STRINGs (not OCTET STRINGs) using strict mode. Note that
+ *            without schema support to understand the data context this can
+ *            erroneously decode values that happen to be valid ASN.1. This
+ *            flag will be deprecated or removed as soon as schema support is
+ *            available. (default: true)
  *
  * @return the parsed asn1 object.
  */
-asn1.fromDer = function(bytes, strict) {
-  if(strict === undefined) {
-    strict = true;
+asn1.fromDer = function(bytes, options) {
+  if(options === undefined) {
+    options = {
+      strict: true,
+      decodeBitStrings: true
+    };
+  }
+  if(typeof options === 'boolean') {
+    options = {
+      strict: options,
+      decodeBitStrings: true
+    };
+  }
+  if(!('strict' in options)) {
+    options.strict = true;
+  }
+  if(!('decodeBitStrings' in options)) {
+    options.decodeBitStrings = true;
   }
 
   // wrap in buffer if needed
@@ -6011,15 +6233,30 @@ asn1.fromDer = function(bytes, strict) {
     bytes = forge.util.createBuffer(bytes);
   }
 
+  return _fromDer(bytes, bytes.length(), 0, options);
+}
+
+/**
+ * Internal function to parse an asn1 object from a byte buffer in DER format.
+ *
+ * @param bytes the byte buffer to parse from.
+ * @param remaining the number of bytes remaining for this chunk.
+ * @param depth the current parsing depth.
+ * @param options object with same options as fromDer().
+ *
+ * @return the parsed asn1 object.
+ */
+function _fromDer(bytes, remaining, depth, options) {
+  // temporary storage for consumption calculations
+  var start;
+
   // minimum length for ASN.1 DER structure is 2
-  if(bytes.length() < 2) {
-    var error = new Error('Too few bytes to parse DER.');
-    error.bytes = bytes.length();
-    throw error;
-  }
+  _checkBufferLength(bytes, remaining, 2);
 
   // get the first byte
   var b1 = bytes.getByte();
+  // consumed one byte
+  remaining--;
 
   // get the tag class
   var tagClass = (b1 & 0xC0);
@@ -6027,107 +6264,156 @@ asn1.fromDer = function(bytes, strict) {
   // get the type (bits 1-5)
   var type = b1 & 0x1F;
 
-  // get the value length
-  var length = _getValueLength(bytes);
+  // get the variable value length and adjust remaining bytes
+  start = bytes.length();
+  var length = _getValueLength(bytes, remaining);
+  remaining -= start - bytes.length();
 
   // ensure there are enough bytes to get the value
-  if(bytes.length() < length) {
-    if(strict) {
+  if(length !== undefined && length > remaining) {
+    if(options.strict) {
       var error = new Error('Too few bytes to read ASN.1 value.');
-      error.detail = bytes.length() + ' < ' + length;
+      error.available = bytes.length();
+      error.remaining = remaining;
+      error.requested = length;
       throw error;
     }
-    // Note: be lenient with truncated values
-    length = bytes.length();
+    // Note: be lenient with truncated values and use remaining state bytes
+    length = remaining;
   }
 
-  // prepare to get value
+  // value storage
   var value;
+  // possible BIT STRING contents storage
+  var bitStringContents;
 
   // constructed flag is bit 6 (32 = 0x20) of the first byte
   var constructed = ((b1 & 0x20) === 0x20);
-
-  // determine if the value is composed of other ASN.1 objects (if its
-  // constructed it will be and if its a BITSTRING it may be)
-  var composed = constructed;
-  if(!composed && tagClass === asn1.Class.UNIVERSAL &&
-    type === asn1.Type.BITSTRING && length > 1) {
-    /* The first octet gives the number of bits by which the length of the
-      bit string is less than the next multiple of eight (this is called
-      the "number of unused bits").
-
-      The second and following octets give the value of the bit string
-      converted to an octet string. */
-    // if there are no unused bits, maybe the bitstring holds ASN.1 objs
-    var read = bytes.read;
-    var unused = bytes.getByte();
-    if(unused === 0) {
-      // if the first byte indicates UNIVERSAL or CONTEXT_SPECIFIC,
-      // and the length is valid, assume we've got an ASN.1 object
-      b1 = bytes.getByte();
-      var tc = (b1 & 0xC0);
-      if(tc === asn1.Class.UNIVERSAL || tc === asn1.Class.CONTEXT_SPECIFIC) {
-        try {
-          var len = _getValueLength(bytes);
-          composed = (len === length - (bytes.read - read));
-          if(composed) {
-            // adjust read/length to account for unused bits byte
-            ++read;
-            --length;
-          }
-        } catch(ex) {}
-      }
-    }
-    // restore read pointer
-    bytes.read = read;
-  }
-
-  if(composed) {
+  if(constructed) {
     // parse child asn1 objects from the value
     value = [];
     if(length === undefined) {
       // asn1 object of indefinite length, read until end tag
       for(;;) {
+        _checkBufferLength(bytes, remaining, 2);
         if(bytes.bytes(2) === String.fromCharCode(0, 0)) {
           bytes.getBytes(2);
+          remaining -= 2;
           break;
         }
-        value.push(asn1.fromDer(bytes, strict));
+        start = bytes.length();
+        value.push(_fromDer(bytes, remaining, depth + 1, options));
+        remaining -= start - bytes.length();
       }
     } else {
       // parsing asn1 object of definite length
-      var start = bytes.length();
       while(length > 0) {
-        value.push(asn1.fromDer(bytes, strict));
-        length -= start - bytes.length();
         start = bytes.length();
+        value.push(_fromDer(bytes, length, depth + 1, options));
+        remaining -= start - bytes.length();
+        length -= start - bytes.length();
       }
     }
-  } else {
-    // asn1 not composed, get raw value
+  }
+
+  // if a BIT STRING, save the contents including padding
+  if(value === undefined && tagClass === asn1.Class.UNIVERSAL &&
+    type === asn1.Type.BITSTRING) {
+    bitStringContents = bytes.bytes(length);
+  }
+
+  // determine if a non-constructed value should be decoded as a composed
+  // value that contains other ASN.1 objects. BIT STRINGs (and OCTET STRINGs)
+  // can be used this way.
+  if(value === undefined && options.decodeBitStrings &&
+    tagClass === asn1.Class.UNIVERSAL &&
+    // FIXME: OCTET STRINGs not yet supported here
+    // .. other parts of forge expect to decode OCTET STRINGs manually
+    (type === asn1.Type.BITSTRING /*|| type === asn1.Type.OCTETSTRING*/) &&
+    length > 1) {
+    // save read position
+    var savedRead = bytes.read;
+    var savedRemaining = remaining;
+    var unused = 0;
+    if(type === asn1.Type.BITSTRING) {
+      /* The first octet gives the number of bits by which the length of the
+        bit string is less than the next multiple of eight (this is called
+        the "number of unused bits").
+
+        The second and following octets give the value of the bit string
+        converted to an octet string. */
+      _checkBufferLength(bytes, remaining, 1);
+      unused = bytes.getByte();
+      remaining--;
+    }
+    // if all bits are used, maybe the BIT/OCTET STRING holds ASN.1 objs
+    if(unused === 0) {
+      try {
+        // attempt to parse child asn1 object from the value
+        // (stored in array to signal composed value)
+        start = bytes.length();
+        var subOptions = {
+          // enforce strict mode to avoid parsing ASN.1 from plain data
+          verbose: options.verbose,
+          strict: true,
+          decodeBitStrings: true
+        };
+        var composed = _fromDer(bytes, remaining, depth + 1, subOptions);
+        var used = start - bytes.length();
+        remaining -= used;
+        if(type == asn1.Type.BITSTRING) {
+          used++;
+        }
+
+        // if the data all decoded and the class indicates UNIVERSAL or
+        // CONTEXT_SPECIFIC then assume we've got an encapsulated ASN.1 object
+        var tc = composed.tagClass;
+        if(used === length &&
+          (tc === asn1.Class.UNIVERSAL || tc === asn1.Class.CONTEXT_SPECIFIC)) {
+          value = [composed];
+        }
+      } catch(ex) {
+      }
+    }
+    if(value === undefined) {
+      // restore read position
+      bytes.read = savedRead;
+      remaining = savedRemaining;
+    }
+  }
+
+  if(value === undefined) {
+    // asn1 not constructed or composed, get raw value
     // TODO: do DER to OID conversion and vice-versa in .toDer?
 
     if(length === undefined) {
-      if(strict) {
+      if(options.strict) {
         throw new Error('Non-constructed ASN.1 object of indefinite length.');
       }
-      // be lenient and use remaining bytes
-      length = bytes.length();
+      // be lenient and use remaining state bytes
+      length = remaining;
     }
 
     if(type === asn1.Type.BMPSTRING) {
       value = '';
-      for(var i = 0; i < length; i += 2) {
+      for(; length > 0; length -= 2) {
+        _checkBufferLength(bytes, remaining, 2);
         value += String.fromCharCode(bytes.getInt16());
+        remaining -= 2;
       }
     } else {
       value = bytes.getBytes(length);
     }
   }
 
+  // add BIT STRING contents if available
+  var asn1Options = bitStringContents === undefined ?  null : {
+    bitStringContents: bitStringContents
+  };
+
   // create and return asn1 object
-  return asn1.create(tagClass, type, constructed, value);
-};
+  return asn1.create(tagClass, type, constructed, value, asn1Options);
+}
 
 /**
  * Converts the given asn1 object to a buffer of bytes in DER format.
@@ -6145,8 +6431,19 @@ asn1.toDer = function(obj) {
   // for storing the ASN.1 value
   var value = forge.util.createBuffer();
 
-  // if composed, use each child asn1 object's DER bytes as value
-  if(obj.composed) {
+  // use BIT STRING contents if available and data not changed
+  var useBitStringContents = false;
+  if('bitStringContents' in obj) {
+    useBitStringContents = true;
+    if(obj.original) {
+      useBitStringContents = asn1.equals(obj, obj.original);
+    }
+  }
+
+  if(useBitStringContents) {
+    value.putBytes(obj.bitStringContents);
+  } else if(obj.composed) {
+    // if composed, use each child asn1 object's DER bytes as value
     // turn on 6th bit (0x20 = 32) to indicate asn1 is constructed
     // from other asn1 objects
     if(obj.constructed) {
@@ -6169,7 +6466,21 @@ asn1.toDer = function(obj) {
         value.putInt16(obj.value.charCodeAt(i));
       }
     } else {
-      value.putBytes(obj.value);
+      // ensure integer is minimally-encoded
+      // TODO: should all leading bytes be stripped vs just one?
+      // .. ex '00 00 01' => '01'?
+      if(obj.type === asn1.Type.INTEGER &&
+        obj.value.length > 1 &&
+        // leading 0x00 for positive integer
+        ((obj.value.charCodeAt(0) === 0 &&
+        (obj.value.charCodeAt(1) & 0x80) === 0) ||
+        // leading 0xFF for negative integer
+        (obj.value.charCodeAt(0) === 0xFF &&
+        (obj.value.charCodeAt(1) & 0x80) === 0x80))) {
+        value.putBytes(obj.value.substr(1));
+      } else {
+        value.putBytes(obj.value);
+      }
     }
   }
 
@@ -6595,7 +6906,10 @@ asn1.derToInteger = function(bytes) {
  *
  * To capture an ASN.1 value, set an object in the validator's 'capture'
  * parameter to the key to use in the capture map. To capture the full
- * ASN.1 object, specify 'captureAsn1'.
+ * ASN.1 object, specify 'captureAsn1'. To capture BIT STRING bytes, including
+ * the leading unused bits counter byte, specify 'captureBitStringContents'.
+ * To capture BIT STRING bytes, without the leading unused bits counter byte,
+ * specify 'captureBitStringValue'.
  *
  * Objects in the validator may set a field 'optional' to true to indicate
  * that it isn't necessary to pass validation.
@@ -6648,6 +6962,23 @@ asn1.validate = function(obj, v, capture, errors) {
         }
         if(v.captureAsn1) {
           capture[v.captureAsn1] = obj;
+        }
+        if(v.captureBitStringContents && 'bitStringContents' in obj) {
+          capture[v.captureBitStringContents] = obj.bitStringContents;
+        }
+        if(v.captureBitStringValue && 'bitStringContents' in obj) {
+          var value;
+          if(obj.bitStringContents.length < 2) {
+            capture[v.captureBitStringValue] = '';
+          } else {
+            // FIXME: support unused bits with data shifting
+            var unused = obj.bitStringContents.charCodeAt(0);
+            if(unused !== 0) {
+              throw new Error(
+                'captureBitStringValue only supported for zero unused bits');
+            }
+            capture[v.captureBitStringValue] = obj.bitStringContents.slice(1);
+          }
         }
       }
     } else if(errors) {
@@ -6730,11 +7061,11 @@ asn1.prettyPrint = function(obj, level, indentation) {
     case asn1.Type.BOOLEAN:
       rval += ' (Boolean)';
       break;
-    case asn1.Type.BITSTRING:
-      rval += ' (Bit string)';
-      break;
     case asn1.Type.INTEGER:
       rval += ' (Integer)';
+      break;
+    case asn1.Type.BITSTRING:
+      rval += ' (Bit string)';
       break;
     case asn1.Type.OCTETSTRING:
       rval += ' (Octet string)';
@@ -6824,6 +7155,23 @@ asn1.prettyPrint = function(obj, level, indentation) {
         rval += asn1.derToInteger(obj.value);
       } catch(ex) {
         rval += '0x' + forge.util.bytesToHex(obj.value);
+      }
+    } else if(obj.type === asn1.Type.BITSTRING) {
+      // TODO: shift bits as needed to display without padding
+      if(obj.value.length > 1) {
+        // remove unused bits field
+        rval += '0x' + forge.util.bytesToHex(obj.value.slice(1));
+      } else {
+        rval += '(none)';
+      }
+      // show unused bit count
+      if(obj.value.length > 0) {
+        var unused = obj.value.charCodeAt(0);
+        if(unused == 1) {
+          rval += ' (1 unused bit shown)';
+        } else if(unused > 1) {
+          rval += ' (' + unused + ' unused bits shown)';
+        }
       }
     } else if(obj.type === asn1.Type.OCTETSTRING) {
       if(!_nonLatinRegex.test(obj.value)) {
@@ -7060,16 +7408,16 @@ sha1.create = function() {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
-    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next;
+      bits = next >>> 0;
     }
+    finalBlock.putInt32(bits);
 
     var s2 = {
       h0: _state.h0,
@@ -7138,7 +7486,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7150,7 +7499,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7163,7 +7513,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7175,7 +7526,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7188,7 +7540,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0x8F1BBCDC + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7201,7 +7554,8 @@ function _update(s, w, bytes) {
       t = ((a << 5) | (a >>> 27)) + f + e + 0xCA62C1D6 + t;
       e = d;
       d = c;
-      c = (b << 30) | (b >>> 2);
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      c = ((b << 30) | (b >>> 2)) >>> 0;
       b = a;
       a = t;
     }
@@ -7435,16 +7789,16 @@ sha256.create = function() {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
-    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next;
+      bits = next >>> 0;
     }
+    finalBlock.putInt32(bits);
 
     var s2 = {
       h0: _state.h0,
@@ -7577,11 +7931,15 @@ function _update(s, w, bytes) {
       h = g;
       g = f;
       f = e;
-      e = (d + t1) | 0;
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      // can't truncate with `| 0`
+      e = (d + t1) >>> 0;
       d = c;
       c = b;
       b = a;
-      a = (t1 + t2) | 0;
+      // `>>> 0` necessary to avoid iOS/Safari 10 optimization bug
+      // can't truncate with `| 0`
+      a = (t1 + t2) >>> 0;
     }
 
     // update hash state
@@ -7855,16 +8213,16 @@ sha512.create = function(algorithm) {
 
     // serialize message length in bits in big-endian order; since length
     // is stored in bytes we multiply by 8 and add carry from next int
-    var messageLength = forge.util.createBuffer();
     var next, carry;
     var bits = md.fullMessageLength[0] * 8;
-    for(var i = 0; i < md.fullMessageLength.length; ++i) {
+    for(var i = 0; i < md.fullMessageLength.length - 1; ++i) {
       next = md.fullMessageLength[i + 1] * 8;
       carry = (next / 0x100000000) >>> 0;
       bits += carry;
       finalBlock.putInt32(bits >>> 0);
-      bits = next;
+      bits = next >>> 0;
     }
+    finalBlock.putInt32(bits);
 
     var h = new Array(_h.length);
     for(var i = 0; i < _h.length; ++i) {
@@ -12564,7 +12922,19 @@ function _bnToBytes(b) {
   if(hex[0] >= '8') {
     hex = '00' + hex;
   }
-  return forge.util.hexToBytes(hex);
+  var bytes = forge.util.hexToBytes(hex);
+
+  // ensure integer is minimally-encoded
+  if(bytes.length > 1 &&
+    // leading 0x00 for positive integer
+    ((bytes.charCodeAt(0) === 0 &&
+    (bytes.charCodeAt(1) & 0x80) === 0) ||
+    // leading 0xFF for negative integer
+    (bytes.charCodeAt(0) === 0xFF &&
+    (bytes.charCodeAt(1) & 0x80) === 0x80))) {
+    return bytes.substr(1);
+  }
+  return bytes;
 }
 
 /**
@@ -12764,7 +13134,9 @@ var defineFunc = function(require, module) {
     }
     forge.defined[name] = true;
     for(var i = 0; i < mods.length; ++i) {
-      mods[i](forge);
+      if(typeof mods[i] === 'function') {
+        mods[i](forge);
+      }
     }
     return forge;
   };
@@ -13297,59 +13669,245 @@ define('connectsdk.net', ['connectsdk.core'], function(connectsdk) {
   connectsdk.net = net;
   return net;
 });
-define("connectsdk.Util", ["connectsdk.core"], function(connectsdk) {
+define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 
-	var Util = function() {
-		this.getMetadata = function() {
+	// Create a singleton from Util so the same util function can be used in different modules
+	var Util = (function () {
+		var instance;
+
+		function createInstance() {
+			// private variables to use in the public methods
+			var applePayPaymentProductId = 302;
+			var androidPayPaymentProductId = 320;
+
 			return {
-				screenSize : window.innerWidth + "x" + window.innerHeight,
-				platformIdentifier : window.navigator.userAgent,
-				sdkIdentifier : ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.1.0',
-				sdkCreator: 'Ingenico'
-			};
-		};
+				applePayPaymentProductId: applePayPaymentProductId,
+				androidPayPaymentProductId: androidPayPaymentProductId,
+				getMetadata: function () {
+					return {
+						screenSize: window.innerWidth + "x" + window.innerHeight,
+						platformIdentifier: window.navigator.userAgent,
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.2.0',
+						sdkCreator: 'Ingenico'
+					};
+				},
+				base64Encode: function (data) {
+					if (typeof data === "object") {
+						try {
+							data = JSON.stringify(data);
+						} catch (e) {
+							throw "data must be either a String or a JSON object";
+						}
+					}
 
-		this.base64Encode = function(data) {
-			if (typeof data === "object") {
-				try {
-					data = JSON.stringify(data);
-				} catch (e) {
-					throw "data must be either a String or a JSON object";
+					var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+					var o1, o2, o3, h1, h2, h3, h4, bits, i = 0, ac = 0, enc = '', tmp_arr = [];
+
+					if (!data) {
+						return data;
+					}
+
+					do {// pack three octets into four hexets
+						o1 = data.charCodeAt(i++);
+						o2 = data.charCodeAt(i++);
+						o3 = data.charCodeAt(i++);
+
+						bits = o1 << 16 | o2 << 8 | o3;
+
+						h1 = bits >> 18 & 0x3f;
+						h2 = bits >> 12 & 0x3f;
+						h3 = bits >> 6 & 0x3f;
+						h4 = bits & 0x3f;
+
+						// use hexets to index into b64, and append result to encoded string
+						tmp_arr[ac++] = b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);
+					} while (i < data.length);
+
+					enc = tmp_arr.join('');
+
+					var r = data.length % 3;
+
+					return (r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
+				},
+				filterOutProductsThatAreNotSupportedInThisBrowser: function (json) {
+					for (var i = json.paymentProducts.length - 1, il = 0; i >= il; i--) {
+						var product = json.paymentProducts[i];
+						if (product && this.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(product.id) > -1) {
+							json.paymentProducts.splice(i, 1);
+						}
+					}
+				},
+				paymentProductsThatAreNotSupportedInThisBrowser: [applePayPaymentProductId]
+			}
+		}
+
+		return {
+			getInstance: function () {
+				if (!instance) {
+					instance = createInstance();
 				}
+				return instance;
 			}
-
-			var b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-			var o1, o2, o3, h1, h2, h3, h4, bits, i = 0, ac = 0, enc = '', tmp_arr = [];
-
-			if (!data) {
-				return data;
-			}
-
-			do {// pack three octets into four hexets
-				o1 = data.charCodeAt(i++);
-				o2 = data.charCodeAt(i++);
-				o3 = data.charCodeAt(i++);
-
-				bits = o1 << 16 | o2 << 8 | o3;
-
-				h1 = bits >> 18 & 0x3f;
-				h2 = bits >> 12 & 0x3f;
-				h3 = bits >> 6 & 0x3f;
-				h4 = bits & 0x3f;
-
-				// use hexets to index into b64, and append result to encoded string
-				tmp_arr[ac++] = b64.charAt(h1) + b64.charAt(h2) + b64.charAt(h3) + b64.charAt(h4);
-			} while (i < data.length);
-
-			enc = tmp_arr.join('');
-
-			var r = data.length % 3;
-
-			return ( r ? enc.slice(0, r - 3) : enc) + '==='.slice(r || 3);
 		};
-	};
+	})();
+
 	connectsdk.Util = Util;
 	return Util;
+});
+define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "connectsdk.Util"], function (connectsdk, Promise, Util) {
+
+    var _util = Util.getInstance();
+    var _C2SCommunicator = null;
+    var _paymentProductSpecificInputs = null;
+    var _context = null;
+
+    var setupRequestMethodData = function (networks, publicKey) {
+        var androidPayEnvironment = 'TEST';
+        if (_context.environment === 'PROD') {
+            androidPayEnvironment = 'PROD';
+        }
+        var methodData = [{
+            supportedMethods: ['https://android.com/pay'],
+            data: {
+                merchantId: _paymentProductSpecificInputs.androidPay.merchantId,
+                environment: androidPayEnvironment,
+                allowedCardNetworks: networks,
+                paymentMethodTokenizationParameters: {
+                    tokenizationType: 'NETWORK_TOKEN',
+                    parameters: {
+                        'publicKey': publicKey
+                    }
+                }
+            }
+        }];
+        return methodData;
+    }
+
+    var setupRequestDetails = function () {
+        var totalAmount = (_context.totalAmount / 100).toFixed(2);
+
+        var details = {
+            total: {
+                label: 'Total',
+                amount: {
+                    currency: 'USD',
+                    value: totalAmount
+                }
+            }
+        };
+        return details;
+    }
+
+    var setupRequestOptions = function () {
+        var options = {
+            requestShipping: false,
+            requestPayerEmail: false,
+            requestPayerPhone: false,
+            requestPayerName: false
+        };
+        return options;
+    }
+
+    var _doCanMakePayment = function (jsonNetworks, jsonPublicKey) {
+        var promise = new Promise();
+
+        var methodData = setupRequestMethodData(jsonNetworks.networks, jsonPublicKey.publicKey);
+        var details = setupRequestDetails();
+        var options = setupRequestOptions();
+        var request = new PaymentRequest(methodData, details, options);
+        setTimeout(function () {
+            // When the PRAPI is available, it does not mean the canMakePayment() method is also implemented.
+            if (request.canMakePayment) {
+                request.canMakePayment().then(function (result) {
+                    if (result) {
+                        promise.resolve(true);
+                    } else {
+                        promise.resolve(false);
+                    }
+                }).catch(function (error) {
+                    promise.reject(error);
+                });
+            } else {
+                promise.resolve(true);
+            }
+        });
+        return promise;
+    }
+
+    var _checkPaymentProductPublicKey = function () {
+        var promise = new Promise();
+        _C2SCommunicator.getPaymentProductPublicKey(_util.androidPayPaymentProductId).then(function (jsonPublicKey) {
+            promise.resolve(jsonPublicKey);
+        }, function () {
+            promise.reject();
+        });
+        return promise;
+    }
+
+    var _checkPaymentProductNetworks = function () {
+        var promise = new Promise();
+        _C2SCommunicator.getPaymentProductNetworks(_util.androidPayPaymentProductId, _context).then(function (jsonNetworks) {
+            if (jsonNetworks.networks && jsonNetworks.networks.length > 0) {
+                promise.resolve(jsonNetworks);
+            } else {
+                promise.reject();
+            }
+        }, function () {
+            promise.reject();
+        });
+        return promise;
+    }
+
+    var _isPaymentRequestAPIAvailable = function () {
+        return window && window.PaymentRequest;
+    }
+
+    this.AndroidPay = function (C2SCommunicator) {
+        _C2SCommunicator = C2SCommunicator;
+        this.isAndroidPayAvailable = function (context, paymentProductSpecificInputs) {
+            _context = context;
+            _paymentProductSpecificInputs = paymentProductSpecificInputs;
+            var promise = new Promise();
+            setTimeout(function () {
+                if (_isPaymentRequestAPIAvailable()) {
+                    _checkPaymentProductNetworks().then(function (jsonNetworks) {
+                        _checkPaymentProductPublicKey().then(function (jsonPublicKey) {
+                            _doCanMakePayment(jsonNetworks, jsonPublicKey).then(function (isAndroidPayAvailable) {
+                                if (!isAndroidPayAvailable) {
+                                    _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                                }
+                                promise.resolve(isAndroidPayAvailable);
+                            }, function () {
+                                _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                                promise.reject('failed to run canMakePayment() check with the payment request API');
+                            });
+                        }, function () {
+                            _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                            promise.reject('failed to retrieve payment product publickey');
+                        });
+                    }, function () {
+                        _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                        promise.reject('failed to retrieve paymentproduct networks');
+                    });
+                } else {
+                    _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                    promise.reject('Payment Request API is not available');
+                }
+            });
+            return promise;
+        }
+
+        this.isMerchantIdProvided = function (paymentProductSpecificInputs) {
+            if (paymentProductSpecificInputs.androidPay.merchantId) {
+                return paymentProductSpecificInputs.androidPay.merchantId;
+            } else {
+                _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.androidPayPaymentProductId);
+                return false;
+            }
+        }
+    };
+    connectsdk.AndroidPay = AndroidPay;
+    return AndroidPay;
 });
 define("connectsdk.PublicKeyResponse", ["connectsdk.core"], function(connectsdk) {
 
@@ -13361,6 +13919,17 @@ define("connectsdk.PublicKeyResponse", ["connectsdk.core"], function(connectsdk)
 
 	connectsdk.PublicKeyResponse = PublicKeyResponse;
 	return PublicKeyResponse;
+});
+define("connectsdk.PaymentProductPublicKeyResponse", ["connectsdk.core"], function(connectsdk) {
+
+	var PaymentProductPublicKeyResponse = function(json) {
+		this.json = json;
+		this.keyId = json.keyId;
+		this.publicKey = json.publicKey;
+	};
+
+	connectsdk.PaymentProductPublicKeyResponse = PaymentProductPublicKeyResponse;
+	return PaymentProductPublicKeyResponse;
 });
 define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(connectsdk) {
 
@@ -13421,12 +13990,12 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
                             }
                             ,DEV_ISC: {
                                 EU: {
-                                    API: "http://api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
+                                    API: "//api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
                                 }
                                 ,US: {
-                                    API: "http://api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "http://rpp.gc-dev.isaac.local"
+                                    API: "//api.gc-ci-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-ci-dev.isaac.local"
                                 }
                             }
                         };
@@ -13454,14 +14023,14 @@ define("connectsdk.IinDetailsResponse", ["connectsdk.core", "connectsdk.promise"
 	connectsdk.IinDetailsResponse = IinDetailsResponse;
 	return IinDetailsResponse;
 });
-define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse) {
+define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.PaymentProductPublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.AndroidPay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, PaymentProductPublicKeyResponse, IinDetailsResponse, AndroidPay) {
 	var C2SCommunicator = function (c2SCommunicatorConfiguration, paymentProduct) {
 		var _c2SCommunicatorConfiguration = c2SCommunicatorConfiguration;
-		var _util = new Util();
+		var _util = Util.getInstance();
 		var _cache = {};
 		var _providedPaymentProduct = paymentProduct;
 		var that = this;
-		var _removedPaymentProductIds = [302, 320];
+		var _AndroidPay = new AndroidPay(that);
 
 		var _mapType = {
 			"expirydate": "tel",
@@ -13475,12 +14044,13 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
 				field.type = (field.displayHints.obfuscate) ? "password" : _mapType[field.type];
+
 				// helper code for templating tools like Handlebars
 				for (validatorKey in field.dataRestrictions.validators) {
 					field.validators = field.validators || [];
 					field.validators.push(validatorKey);
 				}
-				if (field.displayHints.formElement.type === 'list') {
+				if (field.displayHints.formElement && field.displayHints.formElement.type === 'list') {
 					field.displayHints.formElement.list = true;
 				}
 
@@ -13489,7 +14059,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					field.displayHints.tooltip.image = url + "/" + field.displayHints.tooltip.image;
 				}
 			}
-			// apply sortorder
+			// The server orders in a different way, so we apply the sortorder
 			json.fields.sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
 					return -1;
@@ -13500,16 +14070,6 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			json.displayHints.logo = url + "/" + json.displayHints.logo;
 			return json;
 		};
-
-		var _removeProducts = function (json) {
-			for (var i = json.paymentProducts.length - 1, il = 0; i >= il; i--) {
-				var product = json.paymentProducts[i];
-				if (product && _removedPaymentProductIds.indexOf(product.id) > -1) {
-					json.paymentProducts.splice(i, 1);
-				}
-			}
-			return json;
-		}
 
 		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
@@ -13525,9 +14085,20 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return json;
 		};
 
+		var _isPaymentProductInList = function (list, paymentProductId) {
+			for (var i = list.length - 1, il = 0; i >= il; i--) {
+				var product = list[i];
+				if (product && (product.id === paymentProductId)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 		var metadata = _util.getMetadata();
 
-		this.getBasicPaymentProducts = function (context) {
+		this.getBasicPaymentProducts = function (context, paymentProductSpecificInputs) {
+			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
@@ -13547,11 +14118,39 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.end(function (res) {
 						if (res.success) {
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
-							json = _removeProducts(json);
-							_cache[cacheKey] = json;
-							promise.resolve(json);
+							if (_isPaymentProductInList(json.paymentProducts, _util.androidPayPaymentProductId)) {
+								if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+									_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+										if (json.paymentProducts.length === 0) {
+											promise.reject('No payment products available');
+										}
+										_cache[cacheKey] = json;
+										promise.resolve(json);
+									}, function () {
+										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+										if (json.paymentProducts.length === 0) {
+											promise.reject('No payment products available');
+										}
+										_cache[cacheKey] = json;
+										promise.resolve(json);
+									});
+								} else {
+									//AndroidPay does not have merchantId 
+									_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+									console.warn('You have not provided a merchantId for Android Pay, you can set this in the paymentProductSpecificInputs object');
+									promise.resolve(json);
+								}
+							} else {
+								_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+								if (json.paymentProducts.length === 0) {
+									promise.reject('No payment products available');
+								}
+								_cache[cacheKey] = json;
+								promise.resolve(json);
+							}
 						} else {
-							promise.reject();
+							promise.reject('failed to retrieve Basic Payment Products', res);
 						}
 					});
 			}
@@ -13588,14 +14187,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function (paymentProductId, context) {
+		this.getPaymentProduct = function (paymentProductId, context, paymentProductSpecificInputs) {
+			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
 					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
 					+ context.currency;
-
-			if (_removedPaymentProductIds.indexOf(paymentProductId) > -1) {
+			if (_util.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(paymentProductId) > -1) {
 				setTimeout(function () {
 					promise.reject({
 						"errorId": "48b78d2d-1b35-4f8b-92cb-57cc2638e901",
@@ -13634,10 +14233,33 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.end(function (res) {
 							if (res.success) {
 								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
-								_cache[cacheKey] = cleanedJSON;
-								promise.resolve(cleanedJSON);
+								if (paymentProductId === _util.androidPayPaymentProductId) {
+									if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+										_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+											if (isAndroidPayAvailable) {
+												_cache[cacheKey] = cleanedJSON;
+												promise.resolve(cleanedJSON);
+											} else {
+												_cache[cacheKey] = cleanedJSON;
+												//_isAndroidPayAvailable returned false so android pay is not available, so reject getPaymentProduct
+												promise.reject(cleanedJSON);
+											}
+										}, function () {
+											_cache[cacheKey] = cleanedJSON;
+											//_isAndroidPayAvailable rejected so not available
+											promise.reject(cleanedJSON);
+										});
+									} else {
+										_cache[cacheKey] = cleanedJSON;
+										// merchantId is not provided so reject
+										promise.reject(cleanedJSON);
+									}
+								} else {
+									_cache[cacheKey] = cleanedJSON;
+									promise.resolve(cleanedJSON);
+								}
 							} else {
-								promise.reject(res);
+								promise.reject('failed to retrieve Payment Product', res);
 							}
 						});
 				}
@@ -13789,6 +14411,58 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							promise.resolve(publicKeyResponse);
 						} else {
 							promise.reject("unable to get public key");
+						}
+					});
+			}
+			return promise;
+		};
+
+		this.getPaymentProductPublicKey = function (paymentProductId) {
+			var promise = new Promise()
+				, cacheKey = "paymentProductPublicKey";
+
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
+					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							var paymentProductPublicKeyResponse = new PaymentProductPublicKeyResponse(res.responseJSON);
+							_cache[cacheKey] = paymentProductPublicKeyResponse;
+							promise.resolve(paymentProductPublicKeyResponse);
+						} else {
+							promise.reject("unable to get payment product public key");
+						}
+					});
+			}
+			return promise;
+		}
+
+		this.getPaymentProductNetworks = function (paymentProductId, context) {
+			var promise = new Promise()
+				, cacheKey = "paymentProductNetworks-" + paymentProductId + "_" + context.countryCode + "_" + context.currency + "_"
+					+ context.totalAmount + "_" + context.isRecurring;
+
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+					+ "/products/" + paymentProductId + "/networks" + "?countryCode=" + context.countryCode + "&currencyCode=" + context.currency
+					+ "&amount=" + context.totalAmount + "&isRecurring=" + context.isRecurring)
+					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							_cache[cacheKey] = res.responseJSON;
+							promise.resolve(res.responseJSON);
+						} else {
+							promise.reject();
 						}
 					});
 			}
@@ -14314,7 +14988,7 @@ define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.Valid
                     className = eval("ValidationRule" + classType);
                 return new className(json);
             } catch (e) {
-                void 0;
+                console.warn('no validator for ', classType);
             }
             return null;
         };
@@ -14400,7 +15074,9 @@ define("connectsdk.PaymentProductFieldDisplayHints", ["connectsdk.core", "connec
 	var PaymentProductFieldDisplayHints = function (json) {
 		this.json = json;
  		this.displayOrder = json.displayOrder;
-		this.formElement = new FormElement(json.formElement);
+		if (json.formElement) {
+			this.formElement = new FormElement(json.formElement);
+		}
 		this.label = json.label;
 		this.mask = json.mask;
 		this.obfuscate = json.obfuscate;
@@ -14938,10 +15614,10 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
 		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
 
-		this.getBasicPaymentProducts = function(paymentRequestPayload) {
+		this.getBasicPaymentProducts = function(paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
-			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext).then(function (json) {
+			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext, paymentProductSpecificInputs).then(function (json) {			
 				_paymentRequestPayload = paymentRequestPayload;
 				var paymentProducts = new BasicPaymentProducts(json);
 				promise.resolve(paymentProducts);
@@ -14964,11 +15640,11 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups) {
+		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			// get products & groups
 			if (useGroups) {
-				_session.getBasicPaymentProducts(paymentRequestPayload).then(function (products) {
+				_session.getBasicPaymentProducts(paymentRequestPayload, paymentProductSpecificInputs).then(function (products) {
 					_session.getBasicPaymentProductGroups(paymentRequestPayload).then(function (groups) {
 						var basicPaymentItems = new BasicPaymentItems(products, groups);
 						promise.resolve(basicPaymentItems);
@@ -14979,7 +15655,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 					promise.reject();
 				});
 			} else {
-				_session.getBasicPaymentProducts(paymentRequestPayload).then(function (products) {
+				_session.getBasicPaymentProducts(paymentRequestPayload, paymentProductSpecificInputs).then(function (products) {
 					var basicPaymentItems = new BasicPaymentItems(products, null);
 					promise.resolve(basicPaymentItems);
 				}, function () {
@@ -14989,11 +15665,11 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function(paymentProductId, paymentRequestPayload) {
+		this.getPaymentProduct = function(paymentProductId, paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			_paymentProductId = paymentProductId;
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
-			_c2sCommunicator.getPaymentProduct(paymentProductId, c2SPaymentProductContext).then(function (response) {
+			_c2sCommunicator.getPaymentProduct(paymentProductId, c2SPaymentProductContext, paymentProductSpecificInputs).then(function (response) {
 				_paymentProduct = new PaymentProduct(response);
 				promise.resolve(_paymentProduct);
 			}, function () {
@@ -15027,6 +15703,20 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return _c2sCommunicator.getPublicKey();
 		};
 
+		this.getPaymentProductPublicKey = function (paymentProductId) {
+			return _c2sCommunicator.getPaymentProductPublicKey(paymentProductId);
+		};
+		this.getPaymentProductNetworks = function (paymentProductId, paymentRequestPayload) {
+			var promise = new Promise();
+			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
+			_c2sCommunicator.getPaymentProductNetworks(paymentProductId, c2SPaymentProductContext).then(function (response) {
+				_paymentRequestPayload = paymentRequestPayload;
+				promise.resolve(response);
+			}, function () {
+				promise.reject();
+			});
+			return promise;
+		};
 		this.getPaymentProductDirectory = function (paymentProductId, currencyCode, countryCode) {
 			return _c2sCommunicator.getPaymentProductDirectory(paymentProductId, currencyCode, countryCode);
 		};
