@@ -34,5 +34,5 @@ This repository uses [gulp](http://gulpjs.com/) to build. Assuming you have npm 
 
 1. If it exists remove the `dist` folder.
 2. From the root of the project install all dependencies: `npm install`.
-3. From the same location run gulp: `gulp`.
+3. From the same location run gulp: `gulp build`.
 4. The result of the build will have been written to the `dist` folder. 

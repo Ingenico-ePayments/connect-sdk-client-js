@@ -34,7 +34,7 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
             total: {
                 label: 'Total',
                 amount: {
-                    currency: 'USD',
+                    currency: _context.currency,
                     value: totalAmount
                 }
             }
@@ -68,7 +68,7 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
                     } else {
                         promise.resolve(false);
                     }
-                }).catch(function (error) {
+                })['catch'](function (error) { // we use ['catch'] notation intead of .catch because of IE8 compatibility
                     promise.reject(error);
                 });
             } else {

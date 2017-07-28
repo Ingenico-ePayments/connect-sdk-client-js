@@ -384,6 +384,8 @@ class Util {
 enum Region {
 	EU
 	US
+	AMS
+	PAR
 }
 
 enum Environment {

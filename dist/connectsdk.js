@@ -13687,7 +13687,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.2.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.3.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -13790,7 +13790,7 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
             total: {
                 label: 'Total',
                 amount: {
-                    currency: 'USD',
+                    currency: _context.currency,
                     value: totalAmount
                 }
             }
@@ -13824,7 +13824,7 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
                     } else {
                         promise.resolve(false);
                     }
-                }).catch(function (error) {
+                })['catch'](function (error) { // we use ['catch'] notation intead of .catch because of IE8 compatibility
                     promise.reject(error);
                 });
             } else {
@@ -13937,32 +13937,56 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
         this.endpoints = {
                             PROD: {
                                 EU: {
-                                    API: "https://api-eu.globalcollect.com/client/v1"
-                                    ,ASSETS: "https://assets.pay1.poweredbyglobalcollect.com"
+                                    API: "https://ams1.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay1.secured-by-ingenico.com"
                                 }
                                 ,US: {
-                                    API: "https://api-us.globalcollect.com/client/v1"
-                                    ,ASSETS: "https://assets.pay2.poweredbyglobalcollect.com"
+                                    API: "https://us.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay2.secured-by-ingenico.com"
+                                }
+                                ,AMS: {
+                                    API: "https://ams2.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay3.secured-by-ingenico.com"
+                                }
+                                ,PAR: {
+                                    API: "https://par.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay4.secured-by-ingenico.com"
                                 }
                             }
                             ,PREPROD: {
                                 EU: {
-                                    API: "https://api-eu-preprod.globalcollect.com/client/v1"
-                                    ,ASSETS: "https://assets.pay1.preprod.poweredbyglobalcollect.com"
+                                    API: "https://ams1.preprod.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay1.preprod.secured-by-ingenico.com"
                                 }
                                 ,US: {
-                                    API: "https://api-us-preprod.globalcollect.com/client/v1"
-                                    ,ASSETS: "https://assets.pay2.preprod.poweredbyglobalcollect.com"
+                                    API: "https://us.preprod.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay2.preprod.secured-by-ingenico.com"
+                                }
+                                ,AMS: {
+                                    API: "https://ams2.preprod.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay3.preprod.secured-by-ingenico.com"
+                                }
+                                ,PAR: {
+                                    API: "https://par-preprod.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay4.preprod.secured-by-ingenico.com"
                                 }
                             }
                             ,SANDBOX: {
                                 EU: {
-                                    API: "https://api-eu-sandbox.globalcollect.com/client/v1"
-                                    ,ASSETS: "https://assets.pay1.sandbox.poweredbyglobalcollect.com"
+                                    API: "https://ams1.sandbox.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay1.sandbox.secured-by-ingenico.com"
                                 }
                                 ,US: {
-                                    API: "https://api-us-sandbox.globalcollect.com/client/v1"
-                                    ,ASSETS: "https://assets.pay2.sandbox.poweredbyglobalcollect.com"
+                                    API: "https://us.sandbox.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay2.sandbox.secured-by-ingenico.com"
+                                }
+                                ,AMS: {
+                                    API: "https://ams2.sandbox.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay3.sandbox.secured-by-ingenico.com"
+                                }
+                                ,PAR: {
+                                    API: "https://par.sandbox.api-ingenico.com/client/v1"
+                                    ,ASSETS: "https://assets.pay4.sandbox.secured-by-ingenico.com"
                                 }
                             }
 
@@ -13977,6 +14001,14 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
                                     API: "https://int-test-api.gcsip.nl:4443/client/v1"
                                     ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
                                 }
+                                ,AMS: {
+                                    API: "https://int-test-api.gcsip.nl:4443/client/v1"
+                                    ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
+                                }
+                                ,PAR: {
+                                    API: "https://int-test-api.gcsip.nl:4443/client/v1"
+                                    ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
+                                }
                             }
                             ,DEV_NAMI: {
                                 EU: {
@@ -13984,6 +14016,14 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
                                     ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
                                 }
                                 ,US: {
+                                    API: "https://nami-test-api.gcsip.nl:4443/client/v1"
+                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                                }
+                                ,AMS: {
+                                    API: "https://nami-test-api.gcsip.nl:4443/client/v1"
+                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                                }
+                                ,PAR: {
                                     API: "https://nami-test-api.gcsip.nl:4443/client/v1"
                                     ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
                                 }
@@ -13996,6 +14036,14 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(
                                 ,US: {
                                     API: "//api.gc-ci-dev.isaac.local/client/v1"
                                     ,ASSETS: "//rpp.gc-ci-dev.isaac.local"
+                                }
+                                ,AMS: {
+                                    API: "//api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
+                                }
+                                ,PAR: {
+                                    API: "//api.gc-dev.isaac.local/client/v1"
+                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
                                 }
                             }
                         };
@@ -15706,6 +15754,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		this.getPaymentProductPublicKey = function (paymentProductId) {
 			return _c2sCommunicator.getPaymentProductPublicKey(paymentProductId);
 		};
+
 		this.getPaymentProductNetworks = function (paymentProductId, paymentRequestPayload) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
@@ -15717,6 +15766,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			});
 			return promise;
 		};
+		
 		this.getPaymentProductDirectory = function (paymentProductId, currencyCode, countryCode) {
 			return _c2sCommunicator.getPaymentProductDirectory(paymentProductId, currencyCode, countryCode);
 		};
