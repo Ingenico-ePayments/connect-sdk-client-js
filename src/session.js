@@ -133,6 +133,17 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			var publicKeyResponsePromise = _c2sCommunicator.getPublicKey();
 			return new Encryptor(publicKeyResponsePromise);
 		};
+
+		this.getThirdPartyPaymentStatus = function (paymentId) {
+			var promise = new Promise();
+			_c2sCommunicator.getThirdPartyPaymentStatus(paymentId).then(function (response) {
+				promise.resolve(response);
+			}, function () {
+				promise.reject();
+			});
+			return promise;
+		};
+
 	};
 	connectsdk.Session = session;
 	return session;

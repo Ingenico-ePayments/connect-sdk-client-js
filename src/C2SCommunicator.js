@@ -77,7 +77,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
-					+ context.locale + "_" + context.isRecurring + "_" + context.currency;
+					+ context.locale + "_" + context.isRecurring + "_" + context.currency + "_" + JSON.stringify(paymentProductSpecificInputs);
 
 			if (_cache[cacheKey]) {
 				setTimeout(function () {
@@ -168,7 +168,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
 					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
-					+ context.currency;
+					+ context.currency + "_" + JSON.stringify(paymentProductSpecificInputs);
 			if (_util.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(paymentProductId) > -1) {
 				setTimeout(function () {
 					promise.reject({
@@ -199,10 +199,22 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+					var getPaymentProductUrl = _c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
 						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
 						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
-						+ "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
+						+ "&currencyCode=" + context.currency + "&locale=" + context.locale;
+						
+					if ((paymentProductId === _util.bancontactPaymentProductId) && 
+					paymentProductSpecificInputs && 
+					paymentProductSpecificInputs.bancontact && 
+					paymentProductSpecificInputs.bancontact.forceBasicFlow) {
+						// Add query parameter to products call to force basic flow for bancontact
+						getPaymentProductUrl += "&forceBasicFlow=" + paymentProductSpecificInputs.bancontact.forceBasicFlow
+					}
+
+					getPaymentProductUrl += "&cacheBust=" + cacheBust;
+
+					Net.get(getPaymentProductUrl)
 						.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 						.end(function (res) {
@@ -489,6 +501,22 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						}
 					});
 			}
+			return promise;
+		};
+
+		this.getThirdPartyPaymentStatus = function (paymentId) {
+			var promise = new Promise();
+
+			Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/payments/" + paymentId + "/thirdpartystatus")
+				.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+				.end(function (res) {
+					if (res.success) {
+						promise.resolve(res.responseJSON);
+					} else {
+						promise.reject("unable to retrieve third party status");
+					}
+				});
 			return promise;
 		};
 	};
