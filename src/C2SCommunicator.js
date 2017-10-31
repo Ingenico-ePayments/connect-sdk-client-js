@@ -111,7 +111,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 										promise.resolve(json);
 									});
 								} else {
-									//AndroidPay does not have merchantId 
+									//AndroidPay does not have merchantId
 									_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
 									console.warn('You have not provided a merchantId for Android Pay, you can set this in the paymentProductSpecificInputs object');
 									promise.resolve(json);
@@ -203,10 +203,10 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
 						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 						+ "&currencyCode=" + context.currency + "&locale=" + context.locale;
-						
-					if ((paymentProductId === _util.bancontactPaymentProductId) && 
-					paymentProductSpecificInputs && 
-					paymentProductSpecificInputs.bancontact && 
+
+					if ((paymentProductId === _util.bancontactPaymentProductId) &&
+					paymentProductSpecificInputs &&
+					paymentProductSpecificInputs.bancontact &&
 					paymentProductSpecificInputs.bancontact.forceBasicFlow) {
 						// Add query parameter to products call to force basic flow for bancontact
 						getPaymentProductUrl += "&forceBasicFlow=" + paymentProductSpecificInputs.bancontact.forceBasicFlow
@@ -519,8 +519,43 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				});
 			return promise;
 		};
-	};
 
+		this.getCustomerDetails = function(paymentProductId, context) {
+
+			var promise = new Promise();
+			var cacheKey = "getCustomerDetails_" + context.countryCode;
+			cacheKey = constructCacheKeyFromKeyValues(cacheKey, context.values);
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/customerDetails")
+					.data(JSON.stringify(context))
+					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							_cache[cacheKey] = res.responseJSON;
+							promise.resolve(res.responseJSON);
+						} else {
+							promise.reject(res.responseJSON);
+						}
+					});
+			}
+			return promise;
+		};
+
+		var constructCacheKeyFromKeyValues = function(prefix, values) {
+			var cacheKey = prefix;
+			for (var key in values){
+				if (values.hasOwnProperty(key)) {
+					cacheKey += "_" + values[key].key + "_" + values[key].value;
+				}
+			}
+			return cacheKey;
+		}
+	};
 
 	connectsdk.C2SCommunicator = C2SCommunicator;
 	return C2SCommunicator;

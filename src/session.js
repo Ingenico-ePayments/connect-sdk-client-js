@@ -4,14 +4,15 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 
 		var _c2SCommunicatorConfiguration = new C2SCommunicatorConfiguration(sessionDetails)
 			,_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct)
-			,_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup, _session = this;
+			,_session = this
+			,_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
 		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
 		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
 
 		this.getBasicPaymentProducts = function(paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
-			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext, paymentProductSpecificInputs).then(function (json) {			
+			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext, paymentProductSpecificInputs).then(function (json) {
 				_paymentRequestPayload = paymentRequestPayload;
 				var paymentProducts = new BasicPaymentProducts(json);
 				promise.resolve(paymentProducts);
@@ -112,7 +113,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			});
 			return promise;
 		};
-		
+
 		this.getPaymentProductDirectory = function (paymentProductId, currencyCode, countryCode) {
 			return _c2sCommunicator.getPaymentProductDirectory(paymentProductId, currencyCode, countryCode);
 		};
@@ -124,7 +125,6 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		this.getPaymentRequest = function () {
 			if (!_paymentRequest) {
 				_paymentRequest = new PaymentRequest(sessionDetails.clientSessionID);
-
 			}
 			return _paymentRequest;
 		};
@@ -144,6 +144,9 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
+		this.getCustomerDetails = function (paymentProductId, paymentRequestPayload) {
+			return _c2sCommunicator.getCustomerDetails(paymentProductId, paymentRequestPayload);
+		};
 	};
 	connectsdk.Session = session;
 	return session;
