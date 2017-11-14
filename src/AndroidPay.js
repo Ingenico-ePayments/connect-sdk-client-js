@@ -150,6 +150,6 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
             }
         }
     };
-    connectsdk.AndroidPay = AndroidPay;
-    return AndroidPay;
+    connectsdk.AndroidPay = this.AndroidPay;
+    return this.AndroidPay;
 });
