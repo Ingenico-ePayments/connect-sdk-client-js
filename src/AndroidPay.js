@@ -106,7 +106,7 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
         return window && window.PaymentRequest;
     }
 
-    this.AndroidPay = function (C2SCommunicator) {
+    var AndroidPay = function (C2SCommunicator) {
         _C2SCommunicator = C2SCommunicator;
         this.isAndroidPayAvailable = function (context, paymentProductSpecificInputs) {
             _context = context;

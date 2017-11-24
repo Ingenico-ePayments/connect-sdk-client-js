@@ -1,15 +1,15 @@
-define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "connectsdk.C2SCommunicatorConfiguration", "connectsdk.IinDetailsResponse", "connectsdk.promise", "connectsdk.C2SPaymentProductContext", "connectsdk.BasicPaymentProducts", "connectsdk.BasicPaymentProductGroups", "connectsdk.PaymentProduct", "connectsdk.PaymentProductGroup", "connectsdk.BasicPaymentItems", "connectsdk.PaymentRequest", "connectsdk.Encryptor"], function(connectsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, BasicPaymentProducts, BasicPaymentProductGroups, PaymentProduct, PaymentProductGroup, BasicPaymentItems, PaymentRequest, Encryptor) {
-
+define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "connectsdk.C2SCommunicatorConfiguration", "connectsdk.IinDetailsResponse", "connectsdk.promise", "connectsdk.C2SPaymentProductContext", "connectsdk.BasicPaymentProducts", "connectsdk.BasicPaymentProductGroups", "connectsdk.PaymentProduct", "connectsdk.PaymentProductGroup", "connectsdk.BasicPaymentItems", "connectsdk.PaymentRequest", "connectsdk.Encryptor"], function (connectsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, BasicPaymentProducts, BasicPaymentProductGroups, PaymentProduct, PaymentProductGroup, BasicPaymentItems, PaymentRequest, Encryptor) {
+	var APIVERSION = "client/v1";
 	var session = function (sessionDetails, paymentProduct) {
 
-		var _c2SCommunicatorConfiguration = new C2SCommunicatorConfiguration(sessionDetails)
-			,_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct)
-			,_session = this
-			,_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
+		var _c2SCommunicatorConfiguration = new C2SCommunicatorConfiguration(sessionDetails, APIVERSION),
+			_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct),
+			_session = this,
+			_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
 		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
 		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
 
-		this.getBasicPaymentProducts = function(paymentRequestPayload, paymentProductSpecificInputs) {
+		this.getBasicPaymentProducts = function (paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
 			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext, paymentProductSpecificInputs).then(function (json) {
@@ -22,7 +22,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getBasicPaymentProductGroups = function(paymentRequestPayload) {
+		this.getBasicPaymentProductGroups = function (paymentRequestPayload) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
 			_c2sCommunicator.getBasicPaymentProductGroups(c2SPaymentProductContext).then(function (json) {
@@ -35,7 +35,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups, paymentProductSpecificInputs) {
+		this.getBasicPaymentItems = function (paymentRequestPayload, useGroups, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			// get products & groups
 			if (useGroups) {
@@ -60,7 +60,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function(paymentProductId, paymentRequestPayload, paymentProductSpecificInputs) {
+		this.getPaymentProduct = function (paymentProductId, paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			_paymentProductId = paymentProductId;
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
@@ -74,7 +74,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getPaymentProductGroup = function(paymentProductGroupId, paymentRequestPayload) {
+		this.getPaymentProductGroup = function (paymentProductGroupId, paymentRequestPayload) {
 			var promise = new Promise();
 			_paymentProductGroupId = paymentProductGroupId;
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
@@ -89,7 +89,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		};
 
 		this.getIinDetails = function (partialCreditCardNumber, paymentRequestPayload) {
-			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '').substring(0,6);
+			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '').substring(0, 6);
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
 			return _c2sCommunicator.getPaymentProductIdByCreditCardNumber(partialCreditCardNumber, c2SPaymentProductContext);
 		};

@@ -13689,7 +13689,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.5.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.6.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -13864,7 +13864,7 @@ define("connectsdk.AndroidPay", ["connectsdk.core", "connectsdk.promise", "conne
         return window && window.PaymentRequest;
     }
 
-    this.AndroidPay = function (C2SCommunicator) {
+    var AndroidPay = function (C2SCommunicator) {
         _C2SCommunicator = C2SCommunicator;
         this.isAndroidPayAvailable = function (context, paymentProductSpecificInputs) {
             _context = context;
@@ -13933,131 +13933,165 @@ define("connectsdk.PaymentProductPublicKeyResponse", ["connectsdk.core"], functi
 	connectsdk.PaymentProductPublicKeyResponse = PaymentProductPublicKeyResponse;
 	return PaymentProductPublicKeyResponse;
 });
-define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function(connectsdk) {
+define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function (connectsdk) {
 
-    var C2SCommunicatorConfiguration = function (sessionDetails) {
+    var C2SCommunicatorConfiguration = function (sessionDetails, apiVersion) {
         this.endpoints = {
-                            PROD: {
-                                EU: {
-                                    API: "https://ams1.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay1.secured-by-ingenico.com"
-                                }
-                                ,US: {
-                                    API: "https://us.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay2.secured-by-ingenico.com"
-                                }
-                                ,AMS: {
-                                    API: "https://ams2.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay3.secured-by-ingenico.com"
-                                }
-                                ,PAR: {
-                                    API: "https://par.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay4.secured-by-ingenico.com"
-                                }
-                            }
-                            ,PREPROD: {
-                                EU: {
-                                    API: "https://ams1.preprod.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay1.preprod.secured-by-ingenico.com"
-                                }
-                                ,US: {
-                                    API: "https://us.preprod.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay2.preprod.secured-by-ingenico.com"
-                                }
-                                ,AMS: {
-                                    API: "https://ams2.preprod.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay3.preprod.secured-by-ingenico.com"
-                                }
-                                ,PAR: {
-                                    API: "https://par-preprod.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay4.preprod.secured-by-ingenico.com"
-                                }
-                            }
-                            ,SANDBOX: {
-                                EU: {
-                                    API: "https://ams1.sandbox.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay1.sandbox.secured-by-ingenico.com"
-                                }
-                                ,US: {
-                                    API: "https://us.sandbox.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay2.sandbox.secured-by-ingenico.com"
-                                }
-                                ,AMS: {
-                                    API: "https://ams2.sandbox.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay3.sandbox.secured-by-ingenico.com"
-                                }
-                                ,PAR: {
-                                    API: "https://par.sandbox.api-ingenico.com/client/v1"
-                                    ,ASSETS: "https://assets.pay4.sandbox.secured-by-ingenico.com"
-                                }
-                            }
+            PROD: {
+                EU: {
+                    API: "https://ams1.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay1.secured-by-ingenico.com"
+                },
+                US: {
+                    API: "https://us.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay2.secured-by-ingenico.com"
+                },
+                AMS: {
+                    API: "https://ams2.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay3.secured-by-ingenico.com"
+                },
+                PAR: {
+                    API: "https://par.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay4.secured-by-ingenico.com"
+                }
+            },
+            PREPROD: {
+                EU: {
+                    API: "https://ams1.preprod.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay1.preprod.secured-by-ingenico.com"
+                },
+                US: {
+                    API: "https://us.preprod.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay2.preprod.secured-by-ingenico.com"
+                },
+                AMS: {
+                    API: "https://ams2.preprod.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay3.preprod.secured-by-ingenico.com"
+                },
+                PAR: {
+                    API: "https://par-preprod.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay4.preprod.secured-by-ingenico.com"
+                }
+            },
+            SANDBOX: {
+                EU: {
+                    API: "https://ams1.sandbox.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay1.sandbox.secured-by-ingenico.com"
+                },
+                US: {
+                    API: "https://us.sandbox.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay2.sandbox.secured-by-ingenico.com"
+                },
+                AMS: {
+                    API: "https://ams2.sandbox.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay3.sandbox.secured-by-ingenico.com"
+                },
+                PAR: {
+                    API: "https://par.sandbox.api-ingenico.com/client/v1",
+                    ASSETS: "https://assets.pay4.sandbox.secured-by-ingenico.com"
+                }
+            }
 
-                            // Non public settings. Only needed in GC development environment. Do not use
-                            // these, they will not work outside GC.
-                            ,INTEGRATION: {
-                                EU: {
-                                    API: "https://int-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
-                                }
-                                ,US: {
-                                    API: "https://int-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
-                                }
-                                ,AMS: {
-                                    API: "https://int-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
-                                }
-                                ,PAR: {
-                                    API: "https://int-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
-                                }
-                            }
-                            ,DEV_NAMI: {
-                                EU: {
-                                    API: "https://nami-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
-                                }
-                                ,US: {
-                                    API: "https://nami-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
-                                }
-                                ,AMS: {
-                                    API: "https://nami-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
-                                }
-                                ,PAR: {
-                                    API: "https://nami-test-api.gcsip.nl:4443/client/v1"
-                                    ,ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
-                                }
-                            }
-                            ,DEV_ISC: {
-                                EU: {
-                                    API: "//api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
-                                }
-                                ,US: {
-                                    API: "//api.gc-ci-dev.isaac.local/client/v1"
-                                    ,ASSETS: "//rpp.gc-ci-dev.isaac.local"
-                                }
-                                ,AMS: {
-                                    API: "//api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
-                                }
-                                ,PAR: {
-                                    API: "//api.gc-dev.isaac.local/client/v1"
-                                    ,ASSETS: "//rpp.gc-dev.isaac.local"
-                                }
-                            }
-                        };
+            // Non public settings. Only needed in GC development environment. Do not use
+            // these, they will not work outside GC.
+            ,
+            INTEGRATION: {
+                EU: {
+                    API: "https://int-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
+                },
+                US: {
+                    API: "https://int-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
+                },
+                AMS: {
+                    API: "https://int-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
+                },
+                PAR: {
+                    API: "https://int-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.int-test-rpp.gcsip.nl:4443"
+                }
+            },
+            DEV_NAMI: {
+                EU: {
+                    API: "https://nami-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                },
+                US: {
+                    API: "https://nami-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                },
+                AMS: {
+                    API: "https://nami-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                },
+                PAR: {
+                    API: "https://nami-test-api.gcsip.nl:4443/client/v1",
+                    ASSETS: "https://assets.nami-test-rpp.gcsip.nl:4443"
+                }
+            },
+            DEV_ISC: {
+                EU: {
+                    API: "//api.gc-dev.isaac.local/client/v1",
+                    ASSETS: "//rpp.gc-dev.isaac.local"
+                },
+                US: {
+                    API: "//api.gc-ci-dev.isaac.local/client/v1",
+                    ASSETS: "//rpp.gc-ci-dev.isaac.local"
+                },
+                AMS: {
+                    API: "//api.gc-dev.isaac.local/client/v1",
+                    ASSETS: "//rpp.gc-dev.isaac.local"
+                },
+                PAR: {
+                    API: "//api.gc-dev.isaac.local/client/v1",
+                    ASSETS: "//rpp.gc-dev.isaac.local"
+                }
+            }
+        };
 
-        this.region = sessionDetails.region;
-        this.environment = sessionDetails.environment || 'RPP'; // in case this is used in the RPP; the RPP will override the endpoints; by using the apiBaseUrl
         this.clientSessionId = sessionDetails.clientSessionID;
         this.customerId = sessionDetails.customerId;
-        this.apiBaseUrl = (sessionDetails.apiBaseUrl || sessionDetails.apiBaseUrl === '') ? sessionDetails.apiBaseUrl : this.endpoints[this.environment][this.region].API;
-        this.assetsBaseUrl = (sessionDetails.assetsBaseUrl || sessionDetails.assetsBaseUrl === '' ) ? sessionDetails.assetsBaseUrl : this.endpoints[this.environment][this.region].ASSETS;
-    };
 
+        // can be removed in a newer version of the SDK from this line
+        if (sessionDetails.region && !sessionDetails.apiBaseUrl) {
+            // use regions; old stuff
+            console.warn("Using regions is deprecated, switch to apiBaseUrl");
+            this.apiBaseUrl = this.endpoints[this.environment][sessionDetails.region].API;
+            this.assetsBaseUrl = this.endpoints[this.environment][sessionDetails.region].ASSETS;
+        } else if (sessionDetails.region && sessionDetails.apiBaseUrl) {
+            // using both is not allowed
+            throw new Error("You cannot use both the apiBaseUrl and the region at the same time, please use the apiBaseUrl only.");
+        } else {
+            // till this line; normal behaviour is below
+            this.apiBaseUrl = sessionDetails.apiBaseUrl;
+            this.assetsBaseUrl = sessionDetails.assetsBaseUrl;
+            if (!this.apiBaseUrl) {
+                throw new Error("This version of the connectSDK requires an apiBaseUrl, which you did not provide.");
+            }
+            if (!this.assetsBaseUrl) {
+                throw new Error("This version of the connectSDK requires an assetsBaseUrl, which you did not provide.");
+            }
+
+            // now that the apiBaseUrl is set check when if the api version is set in the URL, its the correct version break if not.
+            if (this.apiBaseUrl.indexOf("//") === -1) {
+                throw new Error("A valid URL is required for the apiBaseUrl, you provided '" + this.apiBaseUrl + "'");
+            }
+            var tester = this.apiBaseUrl.split("/"); // [0] = (http(s): || "") , [1] = "", [2] = "host:port", [3+] = path
+            if (tester[0] !== "" && tester[0].indexOf("http") !== 0) {
+                throw new Error("A valid URL is required for the apiBaseUrl, you provided '" + this.apiBaseUrl + "'");
+            }
+            // if you cannot provide an URL that starts with (http(s)::)// and want an error: please provide a PR :)
+
+            var path = tester.splice(3).join("/"); // the path (if no path; path = "").
+            if (!path) {
+                this.apiBaseUrl += "/" + apiVersion;
+            } else if (path.indexOf(apiVersion) !== 0 || path.length !== apiVersion.length) {
+                throw new Error("This version of the connectSDK is only compatible with " + apiVersion + ", you supplied: '" + path + "'");
+            }
+        }
+    };
     connectsdk.C2SCommunicatorConfiguration = C2SCommunicatorConfiguration;
     return C2SCommunicatorConfiguration;
 });
@@ -15066,7 +15100,7 @@ define("connectsdk.ValidationRuleEmailAddress", ["connectsdk.core"], function(co
         this.errorMessageId = json.type;
         
 		this.validate = function(value) {
-			var regexp = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)*(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+			var regexp = new RegExp(/^[^@\.]+(\.[^@\.]+)*@([^@\.]+\.)*[^@\.]+\.[^@\.][^@\.]+$/i);
 			return regexp.test(value);
 		};
 	};
@@ -15717,18 +15751,18 @@ define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connec
 	connectsdk.Encryptor = Encryptor;
 	return Encryptor;
 });
-define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "connectsdk.C2SCommunicatorConfiguration", "connectsdk.IinDetailsResponse", "connectsdk.promise", "connectsdk.C2SPaymentProductContext", "connectsdk.BasicPaymentProducts", "connectsdk.BasicPaymentProductGroups", "connectsdk.PaymentProduct", "connectsdk.PaymentProductGroup", "connectsdk.BasicPaymentItems", "connectsdk.PaymentRequest", "connectsdk.Encryptor"], function(connectsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, BasicPaymentProducts, BasicPaymentProductGroups, PaymentProduct, PaymentProductGroup, BasicPaymentItems, PaymentRequest, Encryptor) {
-
+define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "connectsdk.C2SCommunicatorConfiguration", "connectsdk.IinDetailsResponse", "connectsdk.promise", "connectsdk.C2SPaymentProductContext", "connectsdk.BasicPaymentProducts", "connectsdk.BasicPaymentProductGroups", "connectsdk.PaymentProduct", "connectsdk.PaymentProductGroup", "connectsdk.BasicPaymentItems", "connectsdk.PaymentRequest", "connectsdk.Encryptor"], function (connectsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, BasicPaymentProducts, BasicPaymentProductGroups, PaymentProduct, PaymentProductGroup, BasicPaymentItems, PaymentRequest, Encryptor) {
+	var APIVERSION = "client/v1";
 	var session = function (sessionDetails, paymentProduct) {
 
-		var _c2SCommunicatorConfiguration = new C2SCommunicatorConfiguration(sessionDetails)
-			,_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct)
-			,_session = this
-			,_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
+		var _c2SCommunicatorConfiguration = new C2SCommunicatorConfiguration(sessionDetails, APIVERSION),
+			_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct),
+			_session = this,
+			_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
 		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
 		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
 
-		this.getBasicPaymentProducts = function(paymentRequestPayload, paymentProductSpecificInputs) {
+		this.getBasicPaymentProducts = function (paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
 			_c2sCommunicator.getBasicPaymentProducts(c2SPaymentProductContext, paymentProductSpecificInputs).then(function (json) {
@@ -15741,7 +15775,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getBasicPaymentProductGroups = function(paymentRequestPayload) {
+		this.getBasicPaymentProductGroups = function (paymentRequestPayload) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
 			_c2sCommunicator.getBasicPaymentProductGroups(c2SPaymentProductContext).then(function (json) {
@@ -15754,7 +15788,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getBasicPaymentItems = function(paymentRequestPayload, useGroups, paymentProductSpecificInputs) {
+		this.getBasicPaymentItems = function (paymentRequestPayload, useGroups, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			// get products & groups
 			if (useGroups) {
@@ -15779,7 +15813,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getPaymentProduct = function(paymentProductId, paymentRequestPayload, paymentProductSpecificInputs) {
+		this.getPaymentProduct = function (paymentProductId, paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
 			_paymentProductId = paymentProductId;
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
@@ -15793,7 +15827,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return promise;
 		};
 
-		this.getPaymentProductGroup = function(paymentProductGroupId, paymentRequestPayload) {
+		this.getPaymentProductGroup = function (paymentProductGroupId, paymentRequestPayload) {
 			var promise = new Promise();
 			_paymentProductGroupId = paymentProductGroupId;
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
@@ -15808,7 +15842,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		};
 
 		this.getIinDetails = function (partialCreditCardNumber, paymentRequestPayload) {
-			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '').substring(0,6);
+			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '').substring(0, 6);
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
 			return _c2sCommunicator.getPaymentProductIdByCreditCardNumber(partialCreditCardNumber, c2SPaymentProductContext);
 		};
