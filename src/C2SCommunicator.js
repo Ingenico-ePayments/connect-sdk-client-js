@@ -15,6 +15,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			"expirationDate": "tel"
 		};
 
+		var formatUrl = function (url) {
+			return (url && endsWith(url, '/')) ? url : url + '/';
+		}
+
+		var endsWith = function(string, suffix) {
+			return string.indexOf(suffix, string.length - suffix.length) !== -1;
+		};
+
 		var _cleanJSON = function (json, url) {
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
@@ -42,14 +50,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				return 1;
 			});
 			// set full image path
-			json.displayHints.logo = url + "/" + json.displayHints.logo;
+			json.displayHints.logo = formatUrl(url) + json.displayHints.logo;
 			return json;
 		};
 
 		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
 				var product = json["paymentProduct" + postfix][i];
-				product.displayHints.logo = url + "/" + product.displayHints.logo;
+				product.displayHints.logo = formatUrl(url) + product.displayHints.logo;
 			}
 			json["paymentProduct" + postfix].sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {

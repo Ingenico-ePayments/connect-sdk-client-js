@@ -13689,7 +13689,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.6.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.7.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -14124,6 +14124,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			"expirationDate": "tel"
 		};
 
+		var formatUrl = function (url) {
+			return (url && endsWith(url, '/')) ? url : url + '/';
+		}
+
+		var endsWith = function(string, suffix) {
+			return string.indexOf(suffix, string.length - suffix.length) !== -1;
+		};
+
 		var _cleanJSON = function (json, url) {
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
@@ -14151,14 +14159,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				return 1;
 			});
 			// set full image path
-			json.displayHints.logo = url + "/" + json.displayHints.logo;
+			json.displayHints.logo = formatUrl(url) + json.displayHints.logo;
 			return json;
 		};
 
 		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
 				var product = json["paymentProduct" + postfix][i];
-				product.displayHints.logo = url + "/" + product.displayHints.logo;
+				product.displayHints.logo = formatUrl(url) + product.displayHints.logo;
 			}
 			json["paymentProduct" + postfix].sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
@@ -15095,10 +15103,10 @@ define("connectsdk.ValidationRuleRegularExpression", ["connectsdk.core"], functi
 define("connectsdk.ValidationRuleEmailAddress", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleEmailAddress = function(json) {
-        this.json = json;
-        this.type = json.type,
-        this.errorMessageId = json.type;
-        
+		this.json = json;
+		this.type = json.type,
+		this.errorMessageId = json.type;
+
 		this.validate = function(value) {
 			var regexp = new RegExp(/^[^@\.]+(\.[^@\.]+)*@([^@\.]+\.)*[^@\.]+\.[^@\.][^@\.]+$/i);
 			return regexp.test(value);
@@ -15107,6 +15115,21 @@ define("connectsdk.ValidationRuleEmailAddress", ["connectsdk.core"], function(co
 
 	connectsdk.ValidationRuleEmailAddress = ValidationRuleEmailAddress;
 	return ValidationRuleEmailAddress;
+});
+define("connectsdk.ValidationRuleTermsAndConditions", ["connectsdk.core"], function(connectsdk) {
+
+	var ValidationRuleTermsAndConditions = function(json) {
+		this.json = json;
+		this.type = json.type,
+		this.errorMessageId = json.type;
+
+		this.validate = function(value) {
+			return true === value || "true" === value;
+		};
+	};
+
+	connectsdk.ValidationRuleTermsAndConditions = ValidationRuleTermsAndConditions;
+	return ValidationRuleTermsAndConditions;
 });
 define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"], function(connectsdk) {
 
@@ -15124,7 +15147,7 @@ define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"
 	connectsdk.ValidationRuleBoletoBancarioRequiredness = ValidationRuleBoletoBancarioRequiredness;
 	return ValidationRuleBoletoBancarioRequiredness;
 });
-define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleBoletoBancarioRequiredness"], function (connectsdk, ValidationRuleEmailAddress, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleBoletoBancarioRequiredness) {
+define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleBoletoBancarioRequiredness"], function (connectsdk, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleBoletoBancarioRequiredness) {
 
     var ValidationRuleFactory = function () {
 
@@ -15144,7 +15167,7 @@ define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.Valid
     connectsdk.ValidationRuleFactory = ValidationRuleFactory;
     return ValidationRuleFactory;
 });
-define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleFactory"], function(connectsdk, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleEmailAddress, ValidationRuleFactory) {
+define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleFactory"], function(connectsdk, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleFactory) {
 
 	var DataRestrictions = function (json, mask) {
 
@@ -15165,7 +15188,7 @@ define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.Validation
 		this.isRequired = json.isRequired;
 		this.validationRules = [];
 		this.validationRuleByType = {};
-		
+
 		_parseJSON(json, this.validationRules, this.validationRuleByType);
 	};
 
