@@ -123,8 +123,8 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function 
         if (sessionDetails.region && !sessionDetails.apiBaseUrl) {
             // use regions; old stuff
             console.warn("Using regions is deprecated, switch to apiBaseUrl");
-            this.apiBaseUrl = this.endpoints[this.environment][sessionDetails.region].API;
-            this.assetsBaseUrl = this.endpoints[this.environment][sessionDetails.region].ASSETS;
+            this.apiBaseUrl = this.endpoints[sessionDetails.environment][sessionDetails.region].API;
+            this.assetsBaseUrl = this.endpoints[sessionDetails.environment][sessionDetails.region].ASSETS;
         } else if (sessionDetails.region && sessionDetails.apiBaseUrl) {
             // using both is not allowed
             throw new Error("You cannot use both the apiBaseUrl and the region at the same time, please use the apiBaseUrl only.");
