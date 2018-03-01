@@ -92,7 +92,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
 					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
@@ -100,7 +100,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
 						if (res.success) {
-							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
+							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "s");
 							if (_isPaymentProductInList(json.paymentProducts, _util.androidPayPaymentProductId)) {
 								if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
 									_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
@@ -151,7 +151,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
 					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
@@ -159,7 +159,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
 						if (res.success) {
-							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "Groups");
+							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "Groups");
 							_cache[cacheKey] = json;
 							promise.resolve(json);
 						} else {
@@ -196,7 +196,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							promise.resolve(_cache[cacheKey]);
 						}, 0);
 					} else {
-						var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
+						var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
 						_cache[cacheKey] = json;
 						setTimeout(function () {
 							promise.resolve(_cache[cacheKey]);
@@ -207,7 +207,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var getPaymentProductUrl = _c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+					var getPaymentProductUrl = _c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
 						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 						+ "&currencyCode=" + context.currency + "&locale=" + context.locale;
@@ -227,7 +227,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 						.end(function (res) {
 							if (res.success) {
-								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetUrl);
 								if (paymentProductId === _util.androidPayPaymentProductId) {
 									if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
 										_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
@@ -274,7 +274,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
+					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
 					_cache[cacheKey] = json;
 					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
@@ -285,7 +285,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
 					+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 					+ "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
@@ -293,7 +293,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
 						if (res.success) {
-							var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+							var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetUrl);
 							_cache[cacheKey] = cleanedJSON;
 							promise.resolve(cleanedJSON);
 						} else {
@@ -323,7 +323,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					return true;
 				};
 				if (isEnoughDigits(partialCreditCardNumber)) {
-					Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
+					Net.post(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
 						.data(JSON.stringify(this.convertContextToIinDetailsContext(partialCreditCardNumber, this.context)))
 						.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
@@ -396,7 +396,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/crypto/publickey")
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/crypto/publickey")
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -421,7 +421,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -447,7 +447,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/products/" + paymentProductId + "/networks" + "?countryCode=" + context.countryCode + "&currencyCode=" + context.currency
 					+ "&amount=" + context.totalAmount + "&isRecurring=" + context.isRecurring)
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
@@ -473,7 +473,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/directory?countryCode=" + countryCode + "&currencyCode=" + currencyCode)
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/directory?countryCode=" + countryCode + "&currencyCode=" + currencyCode)
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -497,7 +497,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/convert/amount?source=" + source + "&target=" + target + "&amount=" + amount)
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/convert/amount?source=" + source + "&target=" + target + "&amount=" + amount)
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -515,7 +515,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		this.getThirdPartyPaymentStatus = function (paymentId) {
 			var promise = new Promise();
 
-			Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/payments/" + paymentId + "/thirdpartystatus")
+			Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/payments/" + paymentId + "/thirdpartystatus")
 				.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 				.end(function (res) {
@@ -538,7 +538,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/customerDetails")
+				Net.post(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/customerDetails")
 					.data(JSON.stringify(context))
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)

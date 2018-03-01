@@ -12,26 +12,26 @@ skinparam class {
 }
 
 package "client API response wrappers" <<Rect>> {
-	
+
 	class BasicPaymentProducts  #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
 		+Array<BasicPaymentProduct> basicPaymentProducts
 		+AssociativeArray<String, BasicPaymentProduct> basicPaymentProductById
 		+AssociativeArray<String, BasicPaymentProduct> basicPaymentProductByAccountOnFileId
 	}
-	
+
 	class BasicPaymentProductGroups  #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
 		+Array<BasicPaymentProductGroup> basicPaymentProductGroups
 		+AssociativeArray<String, BasicPaymentProductGroup> basicPaymentProductGroupById
 	}
-	
+
 	class BasicPaymentItems  #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
 		+Array<BasicPaymentItem> basicPaymentItems
@@ -39,20 +39,20 @@ package "client API response wrappers" <<Rect>> {
 	}
 
 	interface BasicPaymentItem  #f2f2f2{
-		+JSON json	
+		+JSON json
 		+String id
 		+DisplayHints displayHints
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
-	}	
-	
-	interface PaymentItem  #f2f2f2 {	
-		+Array<PaymentProductField> paymentProductFields
-		+AssociativeArray<String, PaymentProductField> paymentProductFieldById	
 	}
-	
+
+	interface PaymentItem  #f2f2f2 {
+		+Array<PaymentProductField> paymentProductFields
+		+AssociativeArray<String, PaymentProductField> paymentProductFieldById
+	}
+
 	class BasicPaymentProduct  #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+String id
 		+Boolean allowsRecurring
 		+Boolean allowsTokenization
@@ -63,31 +63,31 @@ package "client API response wrappers" <<Rect>> {
 		+Number maxAmount
 		+Boolean usesRedirectionTo3rdParty
 		+String paymentMethod
-		+String paymentGroup		
+		+String paymentGroup
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
-	} 
-	
+	}
+
 	class PaymentProduct  #f2f2f2 {
 		+Array<PaymentProductField> paymentProductFields
 		+AssociativeArray<String, PaymentProductField> paymentProductFieldById
-	} 	
-	
+	}
+
 	class BasicPaymentProductGroup  #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+String id
 		+DisplayHints displayHints
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
-	} 
-	
+	}
+
 	class PaymentProductGroup  #f2f2f2 {
 		+Array<PaymentProductField> paymentProductFields
 		+AssociativeArray<String, PaymentProductField> paymentProductFieldById
-	} 	
-		
+	}
+
 	class AccountOnFile #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+String id
 		+String paymentProductId
 		+String displayText
@@ -96,7 +96,7 @@ package "client API response wrappers" <<Rect>> {
 		+AccountOnFileDisplayHints displayHints
 		+String getMaskedValueByAttributeKey(String attributeKey)
 	}
-	
+
 	class Attribute #f2f2f2 {
 		+JSON json
 		+String key
@@ -104,7 +104,7 @@ package "client API response wrappers" <<Rect>> {
 		+AccountOnFileAttributeStatus status
 		+String mustWriteReason
 	}
-	
+
 	class LabelTemplateElement #f2f2f2 {
 		+JSON json
 		+String attributeKey
@@ -117,9 +117,9 @@ package "client API response wrappers" <<Rect>> {
 		+Array<labelTemplateElement> labelTemplate
 		+AssociativeArray<String, labelTemplateElement> labelTemplateElementByAttributeKey
 	}
-	
+
 	class PaymentProductField #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+String id
 		+String type
 		+Number displayOrder
@@ -134,19 +134,19 @@ package "client API response wrappers" <<Rect>> {
 	}
 
 	class PaymentProductDisplayHints #f2f2f2 {
-		+JSON json	
-		+Number displayOrder	
+		+JSON json
+		+Number displayOrder
 		+String label
 		+String logo
 	}
 	class PaymentProductFieldDisplayHints #f2f2f2 {
-		+JSON json	
+		+JSON json
 		+PreferredInputType preferredInputType
 		+FormElement formElement
 		+String mask
 		+String wildcardMask
 		+Boolean obfuscate
-		+Number displayOrder	
+		+Number displayOrder
 		+String label
 		+String placeholderLabel
 		+Tooltip tooltip
@@ -207,7 +207,7 @@ package "client API response wrappers" <<Rect>> {
 		+Boolean isAllowedInContext
 		+Array<IinDetail> coBrands
 	}
-	
+
 	class IinDetail #f2f2f2 {
 		+JSON json
 		+String paymentProductId
@@ -234,11 +234,11 @@ package "client API response wrappers" <<Rect>> {
 	}
 
 	class ValueMappingElement #f2f2f2 {
-		+JSON json		
+		+JSON json
 		+String displayName
 		+String value
 	}
-	
+
 	enum PreferredInputType #f2f2f2 {
 		STRING_KEYBOARD
 		INTEGER_KEYBOARD
@@ -256,7 +256,7 @@ package "client API response wrappers" <<Rect>> {
 		SUPPORTED
 		UNSUPPORTED
 		UNKNOWN
-		NOT_ENOUGH_DIGITS	
+		NOT_ENOUGH_DIGITS
 		EXISTING_BUT_NOT_ALLOWED
 	}
 
@@ -275,9 +275,9 @@ package "client API response wrappers" <<Rect>> {
 }
 
 class Session {
-	+String apiBaseUrl
-	+String assetsBaseUrl
-    +Session(SessionDetails sessionDetails)	
+	+String clientApiUrl
+	+String assetUrl
+    +Session(SessionDetails sessionDetails)
 	+Promise<JSON> convertAmount(amount, source, target)
 	+Encryptor getEncryptor()
 	+Boolean isEnvironmentTypeProduction()
@@ -288,7 +288,7 @@ class Session {
 	+Promise<BasicPaymentProductGroups> getBasicPaymentProductGroups(PaymentDetails paymentDetails)
 	+Promise<BasicPaymentItems> getBasicPaymentItems(PaymentDetails paymentDetails, boolean isGrouped)
 	+Promise<JSON> getPaymentProductDirectory(paymentProductId, currencyCode, countryCode)
-	+Promise<JSON> getPaymentProductNetworks(paymentProductId, PaymentDetails paymentDetails)	
+	+Promise<JSON> getPaymentProductNetworks(paymentProductId, PaymentDetails paymentDetails)
 	+PaymentRequest getPaymentRequest()
 	+Promise<PublicKeyResponse> getPublicKey()
 }
@@ -306,11 +306,11 @@ class C2SCommunicator {
 
 class C2SCommunicatorConfiguration {
 	+String clientSessionId
-	+String consumerId 
+	+String consumerId
 	+Region region
 	+Environment environment
-	+String apiBaseUrl
-	+String assetsBaseUrl
+	+String clientApiUrl
+	+String assetUrl
 	+C2SCommunicatorConfiguration(SessionDetails sessionDetails)
 }
 
@@ -400,7 +400,7 @@ Session "1" o-- "*" PaymentProduct
 Session "1" o-- "1" BasicPaymentProducts
 Session "1" o-- "*" PaymentProductGroup
 Session "1" o-- "1" BasicPaymentProductGroups
-Session "1" o-- "1" BasicPaymentItems  
+Session "1" o-- "1" BasicPaymentItems
 Session "1" o-- "1" Encryptor
 Session --> PaymentDetails
 Session --> SessionDetails
@@ -456,7 +456,7 @@ AccountOnFileDisplayHints "1" *-- "*" LabelTemplateElement
 AccountOnFile "1" *-- "*" Attribute
 PaymentProductField "1" *-- "1" DataRestrictions
 DataRestrictions "1" *-- "*" ValidationRule
-MaskingUtil --> MaskedString 
+MaskingUtil --> MaskedString
 DataRestrictions --> ValidationRuleFactory
 ValidationRuleFactory --> ValidationRule
 @enduml

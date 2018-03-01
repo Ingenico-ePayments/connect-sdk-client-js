@@ -6,8 +6,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct),
 			_session = this,
 			_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
-		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
-		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
+		this.clientApiUrl = _c2SCommunicatorConfiguration.clientApiUrl;
+		this.assetUrl = _c2SCommunicatorConfiguration.assetUrl;
 
 		this.getBasicPaymentProducts = function (paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
@@ -124,7 +124,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 
 		this.getPaymentRequest = function () {
 			if (!_paymentRequest) {
-				_paymentRequest = new PaymentRequest(sessionDetails.clientSessionID);
+				_paymentRequest = new PaymentRequest(_c2SCommunicatorConfiguration.clientSessionId);
 			}
 			return _paymentRequest;
 		};

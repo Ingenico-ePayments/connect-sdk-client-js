@@ -13689,7 +13689,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.7.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.8.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -14051,42 +14051,59 @@ define("connectsdk.C2SCommunicatorConfiguration", ["connectsdk.core"], function 
             }
         };
 
-        this.clientSessionId = sessionDetails.clientSessionID;
+        // clientSessionID, assetBaseUrl and apiBaseUrl are deprecated but still may be used. Here we check for presense of new variables, if they dont exist... Use the old variables.
+        if (!sessionDetails.clientSessionId) {
+            sessionDetails.clientSessionId = sessionDetails.clientSessionID;
+        } else if (sessionDetails.clientSessionID) {
+            throw new Error("You cannot use both the clientSessionId and the clientSessionID at the same time, please use the clientSessionId only.");
+        }
+        if (!sessionDetails.assetUrl) {
+            sessionDetails.assetUrl = sessionDetails.assetsBaseUrl
+        } else if (sessionDetails.assetsBaseUrl) {
+            throw new Error("You cannot use both the assetUrl and the assetsBaseUrl at the same time, please use the assetUrl only.");
+        }
+        if (!sessionDetails.clientApiUrl) {
+            sessionDetails.clientApiUrl = sessionDetails.apiBaseUrl
+        } else if (sessionDetails.apiBaseUrl) {
+            throw new Error("You cannot use both the clientApiUrl and the apiBaseUrl at the same time, please use the clientApiUrl only.");
+        }
+
+        this.clientSessionId = sessionDetails.clientSessionId;
         this.customerId = sessionDetails.customerId;
 
         // can be removed in a newer version of the SDK from this line
-        if (sessionDetails.region && !sessionDetails.apiBaseUrl) {
+        if (sessionDetails.region && !sessionDetails.clientApiUrl) {
             // use regions; old stuff
-            console.warn("Using regions is deprecated, switch to apiBaseUrl");
-            this.apiBaseUrl = this.endpoints[this.environment][sessionDetails.region].API;
-            this.assetsBaseUrl = this.endpoints[this.environment][sessionDetails.region].ASSETS;
-        } else if (sessionDetails.region && sessionDetails.apiBaseUrl) {
-            // using both is not allowed
-            throw new Error("You cannot use both the apiBaseUrl and the region at the same time, please use the apiBaseUrl only.");
+            console.warn("Using regions is deprecated, switch to clientApiUrl");
+            this.clientApiUrl = this.endpoints[sessionDetails.environment][sessionDetails.region].API;
+            this.assetUrl = this.endpoints[sessionDetails.environment][sessionDetails.region].ASSETS;
         } else {
             // till this line; normal behaviour is below
-            this.apiBaseUrl = sessionDetails.apiBaseUrl;
-            this.assetsBaseUrl = sessionDetails.assetsBaseUrl;
-            if (!this.apiBaseUrl) {
-                throw new Error("This version of the connectSDK requires an apiBaseUrl, which you did not provide.");
+            // ignore the region here
+            this.clientApiUrl = sessionDetails.clientApiUrl;
+            this.assetUrl = sessionDetails.assetUrl;
+            if (!this.clientApiUrl) {
+                throw new Error("This version of the connectSDK requires an clientApiUrl, which you did not provide.");
             }
-            if (!this.assetsBaseUrl) {
-                throw new Error("This version of the connectSDK requires an assetsBaseUrl, which you did not provide.");
+            if (!this.assetUrl) {
+                throw new Error("This version of the connectSDK requires an assetUrl, which you did not provide.");
             }
 
-            // now that the apiBaseUrl is set check when if the api version is set in the URL, its the correct version break if not.
-            if (this.apiBaseUrl.indexOf("//") === -1) {
-                throw new Error("A valid URL is required for the apiBaseUrl, you provided '" + this.apiBaseUrl + "'");
+            // now that the clientApiUrl is set check when if the api version is set in the URL, its the correct version break if not.
+            if (this.clientApiUrl.indexOf("//") === -1) {
+                throw new Error("A valid URL is required for the clientApiUrl, you provided '" + this.clientApiUrl + "'");
             }
-            var tester = this.apiBaseUrl.split("/"); // [0] = (http(s): || "") , [1] = "", [2] = "host:port", [3+] = path
+            var tester = this.clientApiUrl.split("/"); // [0] = (http(s): || "") , [1] = "", [2] = "host:port", [3+] = path
             if (tester[0] !== "" && tester[0].indexOf("http") !== 0) {
-                throw new Error("A valid URL is required for the apiBaseUrl, you provided '" + this.apiBaseUrl + "'");
+                throw new Error("A valid URL is required for the clientApiUrl, you provided '" + this.clientApiUrl + "'");
             }
             // if you cannot provide an URL that starts with (http(s)::)// and want an error: please provide a PR :)
 
             var path = tester.splice(3).join("/"); // the path (if no path; path = "").
-            if (!path) {
-                this.apiBaseUrl += "/" + apiVersion;
+            if (!path) { //If path == ""
+                this.clientApiUrl += "/" + apiVersion;
+            } else if (path === 'client') { //If path == client
+                this.clientApiUrl += "/" + apiVersion.split('/')[1];
             } else if (path.indexOf(apiVersion) !== 0 || path.length !== apiVersion.length) {
                 throw new Error("This version of the connectSDK is only compatible with " + apiVersion + ", you supplied: '" + path + "'");
             }
@@ -14201,7 +14218,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
 					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
@@ -14209,7 +14226,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
 						if (res.success) {
-							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "s");
+							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "s");
 							if (_isPaymentProductInList(json.paymentProducts, _util.androidPayPaymentProductId)) {
 								if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
 									_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
@@ -14260,7 +14277,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
 					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
@@ -14268,7 +14285,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
 						if (res.success) {
-							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetsBaseUrl, "Groups");
+							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "Groups");
 							_cache[cacheKey] = json;
 							promise.resolve(json);
 						} else {
@@ -14305,7 +14322,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							promise.resolve(_cache[cacheKey]);
 						}, 0);
 					} else {
-						var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
+						var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
 						_cache[cacheKey] = json;
 						setTimeout(function () {
 							promise.resolve(_cache[cacheKey]);
@@ -14316,7 +14333,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var getPaymentProductUrl = _c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+					var getPaymentProductUrl = _c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
 						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 						+ "&currencyCode=" + context.currency + "&locale=" + context.locale;
@@ -14336,7 +14353,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 						.end(function (res) {
 							if (res.success) {
-								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetUrl);
 								if (paymentProductId === _util.androidPayPaymentProductId) {
 									if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
 										_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
@@ -14383,7 +14400,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetsBaseUrl);
+					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
 					_cache[cacheKey] = json;
 					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
@@ -14394,7 +14411,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
 					+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 					+ "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
@@ -14402,7 +14419,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
 						if (res.success) {
-							var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetsBaseUrl);
+							var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetUrl);
 							_cache[cacheKey] = cleanedJSON;
 							promise.resolve(cleanedJSON);
 						} else {
@@ -14432,7 +14449,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					return true;
 				};
 				if (isEnoughDigits(partialCreditCardNumber)) {
-					Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
+					Net.post(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
 						.data(JSON.stringify(this.convertContextToIinDetailsContext(partialCreditCardNumber, this.context)))
 						.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 						.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
@@ -14505,7 +14522,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/crypto/publickey")
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/crypto/publickey")
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -14530,7 +14547,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -14556,7 +14573,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/products/" + paymentProductId + "/networks" + "?countryCode=" + context.countryCode + "&currencyCode=" + context.currency
 					+ "&amount=" + context.totalAmount + "&isRecurring=" + context.isRecurring)
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
@@ -14582,7 +14599,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/directory?countryCode=" + countryCode + "&currencyCode=" + currencyCode)
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/directory?countryCode=" + countryCode + "&currencyCode=" + currencyCode)
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -14606,7 +14623,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/convert/amount?source=" + source + "&target=" + target + "&amount=" + amount)
+				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/services/convert/amount?source=" + source + "&target=" + target + "&amount=" + amount)
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -14624,7 +14641,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		this.getThirdPartyPaymentStatus = function (paymentId) {
 			var promise = new Promise();
 
-			Net.get(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/payments/" + paymentId + "/thirdpartystatus")
+			Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/payments/" + paymentId + "/thirdpartystatus")
 				.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 				.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 				.end(function (res) {
@@ -14647,7 +14664,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				Net.post(_c2SCommunicatorConfiguration.apiBaseUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/customerDetails")
+				Net.post(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/customerDetails")
 					.data(JSON.stringify(context))
 					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
@@ -15782,8 +15799,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			_c2sCommunicator = new C2SCommunicator(_c2SCommunicatorConfiguration, paymentProduct),
 			_session = this,
 			_paymentProductId, _paymentProduct, _paymentRequestPayload, _paymentRequest, _paymentProductGroupId, _paymentProductGroup;
-		this.apiBaseUrl = _c2SCommunicatorConfiguration.apiBaseUrl;
-		this.assetsBaseUrl = _c2SCommunicatorConfiguration.assetsBaseUrl;
+		this.clientApiUrl = _c2SCommunicatorConfiguration.clientApiUrl;
+		this.assetUrl = _c2SCommunicatorConfiguration.assetUrl;
 
 		this.getBasicPaymentProducts = function (paymentRequestPayload, paymentProductSpecificInputs) {
 			var promise = new Promise();
@@ -15900,7 +15917,7 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 
 		this.getPaymentRequest = function () {
 			if (!_paymentRequest) {
-				_paymentRequest = new PaymentRequest(sessionDetails.clientSessionID);
+				_paymentRequest = new PaymentRequest(_c2SCommunicatorConfiguration.clientSessionId);
 			}
 			return _paymentRequest;
 		};
