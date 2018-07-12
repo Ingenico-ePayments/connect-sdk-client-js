@@ -13689,7 +13689,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.9.1',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.9.2',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -14207,21 +14207,23 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		var metadata = _util.getMetadata();
 
 		this.getBasicPaymentProducts = function (context, paymentProductSpecificInputs) {
-			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
+            var cacheKeyLocale= context.locale ? context.locale + "_" : '';
+            var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
-					+ context.locale + "_" + context.isRecurring + "_" + context.currency + "_" + JSON.stringify(paymentProductSpecificInputs);
+					+ cacheKeyLocale + context.isRecurring + "_" + context.currency + "_" + JSON.stringify(paymentProductSpecificInputs);
 
 			if (_cache[cacheKey]) {
 				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
+                var urlParameterLocale = context.locale ? "&locale=" + context.locale: '';
 				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
-					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
+                    + "&hide=fields" + urlParameterLocale + "&cacheBust=" + cacheBust)
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -14267,20 +14269,22 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		};
 
 		this.getBasicPaymentProductGroups = function (context) {
-			var promise = new Promise()
+            var cacheKeyLocale = context.locale ? context.locale + "_" : '';
+            var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProductGroups-" + context.totalAmount + "_" + context.countryCode + "_"
-					+ context.locale + "_" + context.isRecurring + "_" + context.currency;
+					+ cacheKeyLocale + context.isRecurring + "_" + context.currency;
 
 			if (_cache[cacheKey]) {
 				setTimeout(function () {
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
+                var urlParameterLocale = context.locale ? "&locale=" + context.locale: '';
 				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
-					+ "&hide=fields&locale=" + context.locale + "&cacheBust=" + cacheBust)
+                    + "&hide=fields" + urlParameterLocale + "&cacheBust=" + cacheBust)
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -14298,10 +14302,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 
 		this.getPaymentProduct = function (paymentProductId, context, paymentProductSpecificInputs) {
 			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
+            var cacheKeyLocale = context.locale ? context.locale + "_" : '';
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProduct-" + paymentProductId + "_" + context.totalAmount + "_"
-					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
+					+ context.countryCode + "_" + cacheKeyLocale + context.isRecurring + "_"
 					+ context.currency + "_" + JSON.stringify(paymentProductSpecificInputs);
 			if (_util.paymentProductsThatAreNotSupportedInThisBrowser.indexOf(paymentProductId) > -1) {
 				setTimeout(function () {
@@ -14333,10 +14338,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
+                    var urlParameterlocale = context.locale ? "&locale=" + context.locale: '';
 					var getPaymentProductUrl = _c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
 						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
-						+ "&currencyCode=" + context.currency + "&locale=" + context.locale;
+                        + "&currencyCode=" + context.currency + "&locale=" + urlParameterlocale;
 
 					if ((paymentProductId === _util.bancontactPaymentProductId) &&
 					paymentProductSpecificInputs &&
@@ -14389,10 +14395,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		};
 
 		this.getPaymentProductGroup = function (paymentProductGroupId, context) {
+            var cacheKeyLocale = context.locale ? context.locale + "_" : '';
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProductGroup-" + paymentProductGroupId + "_" + context.totalAmount + "_"
-					+ context.countryCode + "_" + "_" + context.locale + "_" + context.isRecurring + "_"
+					+ context.countryCode + "_" + cacheKeyLocale + context.isRecurring + "_"
 					+ context.currency;
 			if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductGroupId) {
 				if (_cache[cacheKey]) {
@@ -14411,10 +14418,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
+                var urlParameterlocale = context.locale ? "&locale=" + context.locale: '';
 				Net.get(_c2SCommunicatorConfiguration.clientApiUrl + "/" + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
 					+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
-					+ "&currencyCode=" + context.currency + "&locale=" + context.locale + "&cacheBust=" + cacheBust)
+                    + "&currencyCode=" + context.currency + urlParameterlocale + "&cacheBust=" + cacheBust)
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
@@ -15693,13 +15701,15 @@ define("connectsdk.PaymentRequest", ["connectsdk.core"], function(connectsdk) {
 });
 define("connectsdk.C2SPaymentProductContext", ["connectsdk.core"], function(connectsdk) {
 
-  var C2SPaymentProductContext = function (payload) {
-	this.totalAmount = payload.totalAmount;
-	this.countryCode = payload.countryCode;
-	this.isRecurring = payload.isRecurring;
-	this.currency = payload.currency;
-	this.locale = payload.locale;
-  };
+    var C2SPaymentProductContext = function (payload) {
+        this.totalAmount = (payload.totalAmount === undefined) ? '' : payload.totalAmount;
+        this.countryCode = payload.countryCode;
+        this.isRecurring = (payload.isRecurring === undefined) ? '' : payload.isRecurring;
+        this.currency = payload.currency;
+        if (payload.locale !== undefined){
+            this.locale = payload.locale
+        }
+    };
 
   connectsdk.C2SPaymentProductContext = C2SPaymentProductContext;
   return C2SPaymentProductContext;
