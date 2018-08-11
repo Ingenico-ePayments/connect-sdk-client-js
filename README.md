@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The JavaScript SDK helps you to communicate with the [Ingenico Connect](http://www.globalcollect.com/) Client API. It's primary features are:
+The JavaScript SDK helps you to communicate with the [Ingenico Connect](https://epayments.developer-ingenico.com/) Client API. It's primary features are:
 
 * handling of all the details concerning the encryption of the payment details,
 * convenient JavaScript wrapper around the API calls and responses,
