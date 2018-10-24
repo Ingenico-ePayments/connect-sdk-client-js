@@ -133,6 +133,19 @@ package "client API response wrappers" <<Rect>> {
 		+String removeMask(String value)
 	}
 
+	class PaymentProduct302SpecificData #f2f2f2 {
+		+JSON json
+		+Array<String> networks
+	}
+	class PaymentProduct320SpecificData #f2f2f2 {
+		+JSON json
+		+Array<String> networks
+	}
+	class PaymentProduct863SpecificData #f2f2f2 {
+		+JSON json
+		+Array<String> integrationTypes
+	}
+
 	class PaymentProductDisplayHints #f2f2f2 {
 		+JSON json
 		+Number displayOrder
@@ -418,6 +431,9 @@ BasicPaymentItem <|-- PaymentItem
 BasicPaymentProduct <|-- PaymentProduct
 BasicPaymentProduct <|- BasicPaymentItem
 BasicPaymentProduct "1" *-- "1" PaymentProductDisplayHints
+BasicPaymentProduct "1" *-- "0/1" PaymentProduct302SpecificData
+BasicPaymentProduct "1" *-- "0/1" PaymentProduct320SpecificData
+BasicPaymentProduct "1" *-- "0/1" PaymentProduct863SpecificData
 
 BasicPaymentProductGroup <|-- PaymentProductGroup
 BasicPaymentProductGroup <|- BasicPaymentItem
