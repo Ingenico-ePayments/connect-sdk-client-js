@@ -1,8 +1,8 @@
 define("connectsdk.PaymentProductField", ["connectsdk.core", "connectsdk.PaymentProductFieldDisplayHints", "connectsdk.DataRestrictions", "connectsdk.MaskingUtil"], function(connectsdk, PaymentProductFieldDisplayHints, DataRestrictions, MaskingUtil) {
 	var PaymentProductField = function (json) {
 		this.json = json;
-		this.displayHints = new PaymentProductFieldDisplayHints(json.displayHints);
-		this.dataRestrictions = new DataRestrictions(json.dataRestrictions, this.displayHints.mask);
+		this.displayHints = json.displayHints ? new PaymentProductFieldDisplayHints(json.displayHints) : '';
+		this.dataRestrictions = new DataRestrictions(json.dataRestrictions, this.displayHints ? this.displayHints.mask : '');
 		this.id = json.id;
 		this.type = json.type;
 		var _errorCodes = [];

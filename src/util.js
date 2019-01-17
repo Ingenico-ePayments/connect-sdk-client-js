@@ -7,12 +7,12 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 		function createInstance() {
 			// private variables to use in the public methods
 			var applePayPaymentProductId = 302;
-			var androidPayPaymentProductId = 320;
+			var googlePayPaymentProductId = 320;
 			var bancontactPaymentProductId = 3012;
 
 			return {
 				applePayPaymentProductId: applePayPaymentProductId,
-				androidPayPaymentProductId: androidPayPaymentProductId,
+				googlePayPaymentProductId: googlePayPaymentProductId,
 				bancontactPaymentProductId: bancontactPaymentProductId,
 				getMetadata: function () {
 					return {

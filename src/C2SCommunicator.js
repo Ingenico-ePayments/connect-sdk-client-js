@@ -1,11 +1,11 @@
-define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.PaymentProductPublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.AndroidPay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, PaymentProductPublicKeyResponse, IinDetailsResponse, AndroidPay) {
+define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.GooglePay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse, GooglePay) {
 	var C2SCommunicator = function (c2SCommunicatorConfiguration, paymentProduct) {
 		var _c2SCommunicatorConfiguration = c2SCommunicatorConfiguration;
 		var _util = Util.getInstance();
 		var _cache = {};
 		var _providedPaymentProduct = paymentProduct;
 		var that = this;
-		var _AndroidPay = new AndroidPay(that);
+		var _GooglePay = new GooglePay(that);
 
 		var _mapType = {
 			"expirydate": "tel",
@@ -17,7 +17,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 
 		var formatUrl = function (url) {
 			return (url && endsWith(url, '/')) ? url : url + '/';
-		}
+		};
 
 		var endsWith = function(string, suffix) {
 			return string.indexOf(suffix, string.length - suffix.length) !== -1;
@@ -26,19 +26,19 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		var _cleanJSON = function (json, url) {
 			for (var i = 0, il = json.fields.length; i < il; i++) {
 				var field = json.fields[i];
-				field.type = (field.displayHints.obfuscate) ? "password" : _mapType[field.type];
+				field.type = (field.displayHints && field.displayHints.obfuscate) ? "password" : _mapType[field.type];
 
 				// helper code for templating tools like Handlebars
 				for (validatorKey in field.dataRestrictions.validators) {
 					field.validators = field.validators || [];
 					field.validators.push(validatorKey);
 				}
-				if (field.displayHints.formElement && field.displayHints.formElement.type === 'list') {
+				if (field.displayHints && field.displayHints.formElement && field.displayHints.formElement.type === 'list') {
 					field.displayHints.formElement.list = true;
 				}
 
 				// full image paths
-				if (field.displayHints.tooltip && field.displayHints.tooltip.image) {
+				if (field.displayHints && field.displayHints.tooltip && field.displayHints.tooltip.image) {
 					field.displayHints.tooltip.image = formatUrl(url) + field.displayHints.tooltip.image;
 				}
 			}
@@ -76,7 +76,17 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				}
 			}
 			return false;
-		}
+		};
+
+        var _getGooglePayNetworks = function (list, paymentProductId) {
+            for (var i = list.length - 1, il = 0; i >= il; i--) {
+                var product = list[i];
+                if (product && (product.id === paymentProductId)) {
+                    return product.paymentProduct320SpecificData.networks
+                }
+            }
+            return false;
+        };
 
 		var metadata = _util.getMetadata();
 
@@ -103,9 +113,10 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.end(function (res) {
 						if (res.success) {
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "s");
-							if (_isPaymentProductInList(json.paymentProducts, _util.androidPayPaymentProductId)) {
-								if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
-									_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
+							if (_isPaymentProductInList(json.paymentProducts, _util.googlePayPaymentProductId)) {
+								if (_GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+									var networks = _getGooglePayNetworks(json.paymentProducts, _util.googlePayPaymentProductId);
+									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, networks).then(function (isGooglePayAvailable) {
 										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
 										if (json.paymentProducts.length === 0) {
 											promise.reject('No payment products available');
@@ -121,9 +132,9 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 										promise.resolve(json);
 									});
 								} else {
-									//AndroidPay does not have merchantId
+									//GooglePay does not have merchantId
 									_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
-									console.warn('You have not provided a merchantId for Android Pay, you can set this in the paymentProductSpecificInputs object');
+									console.warn('You have not provided a merchantId for Google Pay, you can set this in the paymentProductSpecificInputs object');
 									promise.resolve(json);
 								}
 							} else {
@@ -234,20 +245,21 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.end(function (res) {
 							if (res.success) {
 								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetUrl);
-								if (paymentProductId === _util.androidPayPaymentProductId) {
-									if (_AndroidPay.isMerchantIdProvided(paymentProductSpecificInputs)) {
-										_AndroidPay.isAndroidPayAvailable(context, paymentProductSpecificInputs).then(function (isAndroidPayAvailable) {
-											if (isAndroidPayAvailable) {
+								if (paymentProductId === _util.googlePayPaymentProductId) {
+									if (_GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+                                        var networks = cleanedJSON.paymentProduct320SpecificData.networks;
+										_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, networks).then(function (isGooglePayAvailable) {
+											if (isGooglePayAvailable) {
 												_cache[cacheKey] = cleanedJSON;
 												promise.resolve(cleanedJSON);
 											} else {
 												_cache[cacheKey] = cleanedJSON;
-												//_isAndroidPayAvailable returned false so android pay is not available, so reject getPaymentProduct
+												//_isGooglePayAvailable returned false so google pay is not available, so reject getPaymentProduct
 												promise.reject(cleanedJSON);
 											}
 										}, function () {
 											_cache[cacheKey] = cleanedJSON;
-											//_isAndroidPayAvailable rejected so not available
+											//_isGooglePayAvailable rejected so not available
 											promise.reject(cleanedJSON);
 										});
 									} else {
@@ -419,31 +431,6 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			}
 			return promise;
 		};
-
-		this.getPaymentProductPublicKey = function (paymentProductId) {
-			var promise = new Promise()
-				, cacheKey = "paymentProductPublicKey";
-
-			if (_cache[cacheKey]) {
-				setTimeout(function () {
-					promise.resolve(_cache[cacheKey]);
-				}, 0);
-			} else {
-				Net.get(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/publicKey")
-					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
-					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
-					.end(function (res) {
-						if (res.success) {
-							var paymentProductPublicKeyResponse = new PaymentProductPublicKeyResponse(res.responseJSON);
-							_cache[cacheKey] = paymentProductPublicKeyResponse;
-							promise.resolve(paymentProductPublicKeyResponse);
-						} else {
-							promise.reject("unable to get payment product public key");
-						}
-					});
-			}
-			return promise;
-		}
 
 		this.getPaymentProductNetworks = function (paymentProductId, context) {
 			var promise = new Promise()

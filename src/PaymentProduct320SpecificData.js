@@ -2,6 +2,7 @@ define("connectsdk.PaymentProduct320SpecificData", ["connectsdk.core"], function
 
 	var PaymentProduct320SpecificData = function (json) {
 		this.json = json;
+		this.gateway = json.gateway;
 		this.networks = json.networks;
 	};
 

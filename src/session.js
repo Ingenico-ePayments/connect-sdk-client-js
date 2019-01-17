@@ -98,10 +98,6 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return _c2sCommunicator.getPublicKey();
 		};
 
-		this.getPaymentProductPublicKey = function (paymentProductId) {
-			return _c2sCommunicator.getPaymentProductPublicKey(paymentProductId);
-		};
-
 		this.getPaymentProductNetworks = function (paymentProductId, paymentRequestPayload) {
 			var promise = new Promise();
 			var c2SPaymentProductContext = new C2SPaymentProductContext(paymentRequestPayload);
