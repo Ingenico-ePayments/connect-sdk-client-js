@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.11.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.11.1',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -572,6 +572,7 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
     var _C2SCommunicator = null;
     var _paymentProductSpecificInputs = null;
     var _context = null;
+    var _gateway = null;
     var _networks = null;
     var paymentsClient = null;
 
@@ -590,7 +591,7 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
         return {
             type: 'PAYMENT_GATEWAY',
             parameters: {
-                'gateway': 'ingenicoglobalcollect',
+                'gateway': _gateway,
                 'gatewayMerchantId': _paymentProductSpecificInputs.googlePay.gatewayMerchantId
             }
         }
@@ -677,10 +678,16 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
 
     var GooglePay = function (C2SCommunicator) {
         _C2SCommunicator = C2SCommunicator;
-        this.isGooglePayAvailable = function (context, paymentProductSpecificInputs, networks) {
+        this.isGooglePayAvailable = function (context, paymentProductSpecificInputs, googlePayData) {
             _context = context;
             _paymentProductSpecificInputs = paymentProductSpecificInputs;
-            _networks = networks;
+            if (googlePayData && googlePayData.networks) {
+                _gateway = googlePayData.gateway;
+                _networks = googlePayData.networks;
+            } else {
+                _gateway = "ingenicoglobalcollect";
+                _networks = googlePayData;
+            }
             var promise = new Promise();
             // This setTimeout is essential to make the following (not fully asynchronous) code work in a promise way in all scenarios. (not needed in happy flow)
             // The SDK has it's only PolyFill for the promise which is not feature complete.
@@ -1005,11 +1012,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return false;
 		};
 
-        var _getGooglePayNetworks = function (list, paymentProductId) {
+        var _getGooglePayData = function (list, paymentProductId) {
             for (var i = list.length - 1, il = 0; i >= il; i--) {
                 var product = list[i];
                 if (product && (product.id === paymentProductId)) {
-                    return product.paymentProduct320SpecificData.networks
+                    return product.paymentProduct320SpecificData;
                 }
             }
             return false;
@@ -1042,8 +1049,8 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "s");
 							if (_isPaymentProductInList(json.paymentProducts, _util.googlePayPaymentProductId)) {
 								if (_GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
-									var networks = _getGooglePayNetworks(json.paymentProducts, _util.googlePayPaymentProductId);
-									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, networks).then(function (isGooglePayAvailable) {
+									var googlePayData = _getGooglePayData(json.paymentProducts, _util.googlePayPaymentProductId);
+									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, googlePayData).then(function (isGooglePayAvailable) {
 										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
 										if (json.paymentProducts.length === 0) {
 											promise.reject('No payment products available');

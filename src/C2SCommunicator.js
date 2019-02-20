@@ -78,11 +78,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return false;
 		};
 
-        var _getGooglePayNetworks = function (list, paymentProductId) {
+        var _getGooglePayData = function (list, paymentProductId) {
             for (var i = list.length - 1, il = 0; i >= il; i--) {
                 var product = list[i];
                 if (product && (product.id === paymentProductId)) {
-                    return product.paymentProduct320SpecificData.networks
+                    return product.paymentProduct320SpecificData;
                 }
             }
             return false;
@@ -115,8 +115,8 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "s");
 							if (_isPaymentProductInList(json.paymentProducts, _util.googlePayPaymentProductId)) {
 								if (_GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
-									var networks = _getGooglePayNetworks(json.paymentProducts, _util.googlePayPaymentProductId);
-									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, networks).then(function (isGooglePayAvailable) {
+									var googlePayData = _getGooglePayData(json.paymentProducts, _util.googlePayPaymentProductId);
+									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, googlePayData).then(function (isGooglePayAvailable) {
 										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
 										if (json.paymentProducts.length === 0) {
 											promise.reject('No payment products available');

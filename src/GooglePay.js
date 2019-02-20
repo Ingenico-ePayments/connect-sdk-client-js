@@ -4,6 +4,7 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
     var _C2SCommunicator = null;
     var _paymentProductSpecificInputs = null;
     var _context = null;
+    var _gateway = null;
     var _networks = null;
     var paymentsClient = null;
 
@@ -22,7 +23,7 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
         return {
             type: 'PAYMENT_GATEWAY',
             parameters: {
-                'gateway': 'ingenicoglobalcollect',
+                'gateway': _gateway,
                 'gatewayMerchantId': _paymentProductSpecificInputs.googlePay.gatewayMerchantId
             }
         }
@@ -109,10 +110,16 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
 
     var GooglePay = function (C2SCommunicator) {
         _C2SCommunicator = C2SCommunicator;
-        this.isGooglePayAvailable = function (context, paymentProductSpecificInputs, networks) {
+        this.isGooglePayAvailable = function (context, paymentProductSpecificInputs, googlePayData) {
             _context = context;
             _paymentProductSpecificInputs = paymentProductSpecificInputs;
-            _networks = networks;
+            if (googlePayData && googlePayData.networks) {
+                _gateway = googlePayData.gateway;
+                _networks = googlePayData.networks;
+            } else {
+                _gateway = "ingenicoglobalcollect";
+                _networks = googlePayData;
+            }
             var promise = new Promise();
             // This setTimeout is essential to make the following (not fully asynchronous) code work in a promise way in all scenarios. (not needed in happy flow)
             // The SDK has it's only PolyFill for the promise which is not feature complete.
