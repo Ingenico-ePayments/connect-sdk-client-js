@@ -1,4 +1,6 @@
-define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connectsdk.JOSEEncryptor"], function(connectsdk, Promise, JOSEEncryptor) {
+define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connectsdk.JOSEEncryptor", "connectsdk.Util"], function(connectsdk, Promise, JOSEEncryptor, Util) {
+
+	var _util = Util.getInstance();
 
 	var Encryptor = function(publicKeyResponsePromise) {
 		this.encrypt = function(paymentRequest) {
@@ -6,18 +8,18 @@ define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connec
 			var encryptedString = '';
 			publicKeyResponsePromise.then(function (publicKeyResponse) {
 				if (paymentRequest.isValid()) {
-				    
+
 					var blob = {
 					   clientSessionId: paymentRequest.getClientSessionID()
 					   ,nonce: forge.util.bytesToHex(forge.random.getBytesSync(16))
 					   ,paymentProductId: paymentRequest.getPaymentProduct().id
                        ,tokenize: paymentRequest.getTokenize()
                     };
-                    
+
 					if (paymentRequest.getAccountOnFile()) {
                         blob["accountOnFileId"] = paymentRequest.getAccountOnFile().id;
                     }
-                    
+
                     var paymentValues = [], values = paymentRequest.getUnmaskedValues();
                     var ownValues = Object.getOwnPropertyNames(values);
 					for (var i = 0; i < ownValues.length; i++) {
@@ -30,7 +32,9 @@ define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connec
 						}
 					}
                     blob["paymentValues"] = paymentValues;
-					
+
+					blob["collectedDeviceInformation"] = _util.collectDeviceInformation();
+
 					// use blob to encrypt
 					var joseEncryptor = new JOSEEncryptor();
 					encryptedString = joseEncryptor.encrypt(blob, publicKeyResponse);

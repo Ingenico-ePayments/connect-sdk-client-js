@@ -498,8 +498,23 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.11.1',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.12.0',
 						sdkCreator: 'Ingenico'
+					};
+				},
+				collectDeviceInformation: function () {
+					return {
+						"timezoneOffsetUtcMinutes": new Date().getTimezoneOffset(),
+						"locale": navigator.language,
+						"browserData": {
+							"javaScriptEnabled": true,
+							"javaEnabled": navigator.javaEnabled(),
+							"colorDepth": screen.colorDepth,
+							"screenHeight": screen.height,
+							"screenWidth": screen.width,
+							"innerHeight": window.innerHeight,
+							"innerWidth": window.innerWidth
+						}
 					};
 				},
 				base64Encode: function (data) {
@@ -2673,7 +2688,9 @@ define("connectsdk.JOSEEncryptor", ["connectsdk.core"], function(connectsdk) {
 	connectsdk.JOSEEncryptor = JOSEEncryptor;
 	return JOSEEncryptor;
 });
-define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connectsdk.JOSEEncryptor"], function(connectsdk, Promise, JOSEEncryptor) {
+define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connectsdk.JOSEEncryptor", "connectsdk.Util"], function(connectsdk, Promise, JOSEEncryptor, Util) {
+
+	var _util = Util.getInstance();
 
 	var Encryptor = function(publicKeyResponsePromise) {
 		this.encrypt = function(paymentRequest) {
@@ -2681,18 +2698,18 @@ define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connec
 			var encryptedString = '';
 			publicKeyResponsePromise.then(function (publicKeyResponse) {
 				if (paymentRequest.isValid()) {
-				    
+
 					var blob = {
 					   clientSessionId: paymentRequest.getClientSessionID()
 					   ,nonce: forge.util.bytesToHex(forge.random.getBytesSync(16))
 					   ,paymentProductId: paymentRequest.getPaymentProduct().id
                        ,tokenize: paymentRequest.getTokenize()
                     };
-                    
+
 					if (paymentRequest.getAccountOnFile()) {
                         blob["accountOnFileId"] = paymentRequest.getAccountOnFile().id;
                     }
-                    
+
                     var paymentValues = [], values = paymentRequest.getUnmaskedValues();
                     var ownValues = Object.getOwnPropertyNames(values);
 					for (var i = 0; i < ownValues.length; i++) {
@@ -2705,7 +2722,9 @@ define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connec
 						}
 					}
                     blob["paymentValues"] = paymentValues;
-					
+
+					blob["collectedDeviceInformation"] = _util.collectDeviceInformation();
+
 					// use blob to encrypt
 					var joseEncryptor = new JOSEEncryptor();
 					encryptedString = joseEncryptor.encrypt(blob, publicKeyResponse);
@@ -2723,6 +2742,7 @@ define("connectsdk.Encryptor", ["connectsdk.core", "connectsdk.promise", "connec
 	connectsdk.Encryptor = Encryptor;
 	return Encryptor;
 });
+
 define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "connectsdk.C2SCommunicatorConfiguration", "connectsdk.IinDetailsResponse", "connectsdk.promise", "connectsdk.C2SPaymentProductContext", "connectsdk.BasicPaymentProducts", "connectsdk.BasicPaymentProductGroups", "connectsdk.PaymentProduct", "connectsdk.PaymentProductGroup", "connectsdk.BasicPaymentItems", "connectsdk.PaymentRequest", "connectsdk.Encryptor"], function (connectsdk, C2SCommunicator, C2SCommunicatorConfiguration, IinDetailsResponse, Promise, C2SPaymentProductContext, BasicPaymentProducts, BasicPaymentProductGroups, PaymentProduct, PaymentProductGroup, BasicPaymentItems, PaymentRequest, Encryptor) {
 	var APIVERSION = "client/v1";
 	var session = function (sessionDetails, paymentProduct) {

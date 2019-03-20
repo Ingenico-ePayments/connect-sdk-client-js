@@ -22,6 +22,21 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 						sdkCreator: 'Ingenico'
 					};
 				},
+				collectDeviceInformation: function () {
+					return {
+						"timezoneOffsetUtcMinutes": new Date().getTimezoneOffset(),
+						"locale": navigator.language,
+						"browserData": {
+							"javaScriptEnabled": true,
+							"javaEnabled": navigator.javaEnabled(),
+							"colorDepth": screen.colorDepth,
+							"screenHeight": screen.height,
+							"screenWidth": screen.width,
+							"innerHeight": window.innerHeight,
+							"innerWidth": window.innerWidth
+						}
+					};
+				},
 				base64Encode: function (data) {
 					if (typeof data === "object") {
 						try {
