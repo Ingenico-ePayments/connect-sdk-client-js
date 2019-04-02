@@ -143,6 +143,18 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		this.getCustomerDetails = function (paymentProductId, paymentRequestPayload) {
 			return _c2sCommunicator.getCustomerDetails(paymentProductId, paymentRequestPayload);
 		};
+
+		/* In case a full JSON representation of a payment product is already available in context,
+		   this method can be used instead of getPaymentProduct for the same (but synchronous) result. */
+		this.transformPaymentProductJSON = function(json) {
+			return new PaymentProduct(_c2sCommunicator.transformPaymentProductJSON(json))
+		};
+
+		/* In case a full JSON representation of a payment product group is already available in context,
+		   this method can be used instead of getPaymentProductGroup for the same (but synchronous) result. */
+		this.transformPaymentProductGroupJSON = function(json) {
+			return new PaymentProductGroup(_c2sCommunicator.transformPaymentProductJSON(json))
+		};
 	};
 	connectsdk.Session = session;
 	return session;

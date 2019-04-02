@@ -13689,7 +13689,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.12.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.13.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -14159,6 +14159,20 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return (url && endsWith(url, '/')) ? url : url + '/';
 		};
 
+		var formatImageUrl = function(url, imageUrl) {
+			url = formatUrl(url);
+			// _cleanJSON can be called multiple times with the same data (which is cached between calls).
+			// Don't prepend the url after the first time.
+			if (startsWith(imageUrl, url)) {
+				return imageUrl;
+			}
+			return url + imageUrl;
+		};
+
+		var startsWith = function(string, prefix) {
+			return string.indexOf(prefix) === 0;
+		};
+
 		var endsWith = function(string, suffix) {
 			return string.indexOf(suffix, string.length - suffix.length) !== -1;
 		};
@@ -14179,7 +14193,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 
 				// full image paths
 				if (field.displayHints && field.displayHints.tooltip && field.displayHints.tooltip.image) {
-					field.displayHints.tooltip.image = formatUrl(url) + field.displayHints.tooltip.image;
+					field.displayHints.tooltip.image = formatImageUrl(url, field.displayHints.tooltip.image);
 				}
 			}
 			// The server orders in a different way, so we apply the sortorder
@@ -14190,14 +14204,14 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				return 1;
 			});
 			// set full image path
-			json.displayHints.logo = formatUrl(url) + json.displayHints.logo;
+			json.displayHints.logo = formatImageUrl(url, json.displayHints.logo);
 			return json;
 		};
 
 		var _extendLogoUrl = function (json, url, postfix) {
 			for (var i = 0, il = json["paymentProduct" + postfix].length; i < il; i++) {
 				var product = json["paymentProduct" + postfix][i];
-				product.displayHints.logo = formatUrl(url) + product.displayHints.logo;
+				product.displayHints.logo = formatImageUrl(url, product.displayHints.logo);
 			}
 			json["paymentProduct" + postfix].sort(function (a, b) {
 				if (a.displayHints.displayOrder < b.displayHints.displayOrder) {
@@ -14232,7 +14246,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 
 		this.getBasicPaymentProducts = function (context, paymentProductSpecificInputs) {
 			var cacheKeyLocale= context.locale ? context.locale + "_" : '';
-			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
+			paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
 				, cacheKey = "getPaymentProducts-" + context.totalAmount + "_" + context.countryCode + "_"
@@ -14326,7 +14340,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		};
 
 		this.getPaymentProduct = function (paymentProductId, context, paymentProductSpecificInputs) {
-			var paymentProductSpecificInputs = paymentProductSpecificInputs || {};
+			paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var cacheKeyLocale = context.locale ? context.locale + "_" : '';
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
@@ -14347,17 +14361,12 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				}, 0);
 			} else {
 				if (_providedPaymentProduct && _providedPaymentProduct.id === paymentProductId) {
-					if (_cache[cacheKey]) {
-						setTimeout(function () {
-							promise.resolve(_cache[cacheKey]);
-						}, 0);
-					} else {
-						var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
-						_cache[cacheKey] = json;
-						setTimeout(function () {
-							promise.resolve(_cache[cacheKey]);
-						}, 0);
+					if (!_cache[cacheKey]) {
+						_cache[cacheKey] = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
 					}
+					setTimeout(function () {
+						promise.resolve(_cache[cacheKey]);
+					}, 0);
 				} else if (_cache[cacheKey]) {
 					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
@@ -14433,8 +14442,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var json = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
-					_cache[cacheKey] = json;
+					_cache[cacheKey] = _cleanJSON(_providedPaymentProduct, _c2SCommunicatorConfiguration.assetUrl);
 					setTimeout(function () {
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
@@ -14477,10 +14485,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				}, 0);
 			} else {
 				var isEnoughDigits = function (partialCreditCardNumber) {
-					if (partialCreditCardNumber.length < 6) {
-						return false;
-					}
-					return true;
+					return partialCreditCardNumber.length >= 6;
 				};
 				if (isEnoughDigits(partialCreditCardNumber)) {
 					Net.post(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId + "/services/getIINdetails")
@@ -14697,7 +14702,12 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				}
 			}
 			return cacheKey;
-		}
+		};
+
+        /* Transforms the JSON representation of a payment product (group) so it matches the result of getPaymentProduct and getPaymentProductGroup. */
+        this.transformPaymentProductJSON = function (json) {
+            return _cleanJSON(json, _c2SCommunicatorConfiguration.assetUrl)
+        };
 	};
 
 	connectsdk.C2SCommunicator = C2SCommunicator;
@@ -15474,7 +15484,6 @@ define("connectsdk.PaymentProduct", ["connectsdk.core", "connectsdk.BasicPayment
 
 	var PaymentProduct = function (json) {
 		var basicPaymentProduct = new BasicPaymentProduct(json);
-		basicPaymentProduct.json = json;
 		basicPaymentProduct.paymentProductFields = [];
 		basicPaymentProduct.paymentProductFieldById = {};
 
@@ -15486,6 +15495,7 @@ define("connectsdk.PaymentProduct", ["connectsdk.core", "connectsdk.BasicPayment
 	connectsdk.PaymentProduct = PaymentProduct;
 	return PaymentProduct;
 });
+
 define("connectsdk.PaymentProductGroup", ["connectsdk.core", "connectsdk.BasicPaymentProduct", "connectsdk.PaymentProductField"], function(connectsdk, BasicPaymentProduct, PaymentProductField) {
 
 	var _parseJSON = function (_json, _paymentProductFields, _paymentProductFieldById) {
@@ -16078,6 +16088,18 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 
 		this.getCustomerDetails = function (paymentProductId, paymentRequestPayload) {
 			return _c2sCommunicator.getCustomerDetails(paymentProductId, paymentRequestPayload);
+		};
+
+		/* In case a full JSON representation of a payment product is already available in context,
+		   this method can be used instead of getPaymentProduct for the same (but synchronous) result. */
+		this.transformPaymentProductJSON = function(json) {
+			return new PaymentProduct(_c2sCommunicator.transformPaymentProductJSON(json))
+		};
+
+		/* In case a full JSON representation of a payment product group is already available in context,
+		   this method can be used instead of getPaymentProductGroup for the same (but synchronous) result. */
+		this.transformPaymentProductGroupJSON = function(json) {
+			return new PaymentProductGroup(_c2sCommunicator.transformPaymentProductJSON(json))
 		};
 	};
 	connectsdk.Session = session;

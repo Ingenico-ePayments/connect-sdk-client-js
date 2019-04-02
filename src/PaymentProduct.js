@@ -12,7 +12,6 @@ define("connectsdk.PaymentProduct", ["connectsdk.core", "connectsdk.BasicPayment
 
 	var PaymentProduct = function (json) {
 		var basicPaymentProduct = new BasicPaymentProduct(json);
-		basicPaymentProduct.json = json;
 		basicPaymentProduct.paymentProductFields = [];
 		basicPaymentProduct.paymentProductFieldById = {};
 
