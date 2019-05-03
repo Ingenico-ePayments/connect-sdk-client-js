@@ -13689,7 +13689,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.13.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.13.1',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -14539,7 +14539,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		};
 
 		this.convertContextToIinDetailsContext = function (partialCreditCardNumber, context) {
-			return {
+			var payload = {
 				"bin": partialCreditCardNumber,
 				"paymentContext": {
 					"countryCode": context.countryCode,
@@ -14549,7 +14549,15 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						"currencyCode": context.currency
 					}
 				}
+			};
+
+			// Account on file id is needed only in case when the merchant
+			// uses multiple payment platforms at the same time.
+			if (typeof context.accountOnFileId !== 'undefined') {
+				payload.accountOnFileId = context.accountOnFileId;
 			}
+
+			return payload;
 		};
 
 		this.getPublicKey = function () {
@@ -15067,18 +15075,24 @@ define("connectsdk.ValidationRuleLuhn", ["connectsdk.core"], function(connectsdk
 define("connectsdk.ValidationRuleExpirationDate", ["connectsdk.core"], function (connectsdk) {
 
 	var _validateDateFormat = function (value) {
+		// value is mmYY or mmYYYY
 		var pattern = /\d{4}|\d{6}$/g;
 		return pattern.test(value);
 	};
 
 	var ValidationRuleExpirationDate = function (json) {
 		this.json = json;
-		this.type = json.type,
-			this.errorMessageId = json.type;
+		this.type = json.type;
+		this.errorMessageId = json.type;
 
-		// value is mmYY or mmYYYY
 		this.validate = function (value) {
+
 			value = value.replace(/[^\d]/g, '');
+			if (!_validateDateFormat(value)) {
+				return false;
+			}
+
+			var split;
 			if (value.length === 4) {
 				split = [value.substring(0, 2), "20" + value.substring(2, 4)];
 			} else if (value.length === 6) {
@@ -15086,21 +15100,31 @@ define("connectsdk.ValidationRuleExpirationDate", ["connectsdk.core"], function 
 			} else {
 				return false;
 			}
-			if (_validateDateFormat(value)) {
-				var now = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-				var expirationDate = new Date(split[1], split[0] - 1, 1);
-				if (expirationDate.getMonth() !== Number(split[0] - 1) || expirationDate.getFullYear() !== Number(split[1])) {
-					return false;
-				}
-				return expirationDate >= now; // the expiration month could be THIS month but that is still valid!
+
+			// The month is zero-based, so subtract one.
+			var expirationMonth = split[0] - 1;
+			var expirationYear = split[1];
+			var expirationDate = new Date(expirationYear, expirationMonth, 1);
+
+			// Compare the input with the parsed date, to check if the date rolled over.
+			if (expirationDate.getMonth() !== Number(expirationMonth) || expirationDate.getFullYear() !== Number(expirationYear)) {
+				return false;
 			}
-			return false;
+
+			// For comparison, set the current year & month and the maximum allowed expiration date.
+			var nowWithDay = new Date();
+			var now = new Date(nowWithDay.getFullYear(), nowWithDay.getMonth(), 1);
+			var maxExpirationDate = new Date(nowWithDay.getFullYear() + 25, 11, 1);
+
+			// The card is still valid if it expires this month.
+			return expirationDate >= now && expirationDate <= maxExpirationDate;
 		};
 	};
 
 	connectsdk.ValidationRuleExpirationDate = ValidationRuleExpirationDate;
 	return ValidationRuleExpirationDate;
 });
+
 define("connectsdk.ValidationRuleFixedList", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleFixedList = function (json) {
@@ -15754,18 +15778,24 @@ define("connectsdk.PaymentRequest", ["connectsdk.core"], function(connectsdk) {
 define("connectsdk.C2SPaymentProductContext", ["connectsdk.core"], function(connectsdk) {
 
     var C2SPaymentProductContext = function (payload) {
-        this.totalAmount = (payload.totalAmount === undefined) ? '' : payload.totalAmount;
+        this.totalAmount = typeof payload.totalAmount !== 'undefined' ? payload.totalAmount : '';
         this.countryCode = payload.countryCode;
-        this.isRecurring = (payload.isRecurring === undefined) ? '' : payload.isRecurring;
+        this.isRecurring = typeof payload.isRecurring !== 'undefined' ? payload.isRecurring : '';
         this.currency = payload.currency;
-        if (payload.locale !== undefined){
-            this.locale = payload.locale
+
+        if (typeof payload.locale !== 'undefined') {
+            this.locale = payload.locale;
+        }
+
+        if (typeof payload.accountOnFileId !== 'undefined') {
+            this.accountOnFileId = parseInt(payload.accountOnFileId);
         }
     };
 
   connectsdk.C2SPaymentProductContext = C2SPaymentProductContext;
   return C2SPaymentProductContext;
 });
+
 define("connectsdk.JOSEEncryptor", ["connectsdk.core"], function(connectsdk) {
 
 	var pki = forge.pki;

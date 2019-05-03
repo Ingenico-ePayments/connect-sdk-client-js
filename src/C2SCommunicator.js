@@ -399,7 +399,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		};
 
 		this.convertContextToIinDetailsContext = function (partialCreditCardNumber, context) {
-			return {
+			var payload = {
 				"bin": partialCreditCardNumber,
 				"paymentContext": {
 					"countryCode": context.countryCode,
@@ -409,7 +409,15 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						"currencyCode": context.currency
 					}
 				}
+			};
+
+			// Account on file id is needed only in case when the merchant
+			// uses multiple payment platforms at the same time.
+			if (typeof context.accountOnFileId !== 'undefined') {
+				payload.accountOnFileId = context.accountOnFileId;
 			}
+
+			return payload;
 		};
 
 		this.getPublicKey = function () {
