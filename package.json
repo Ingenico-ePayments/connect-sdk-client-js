@@ -1,6 +1,6 @@
 {
   "name": "connect-sdk-client-js",
-  "version": "3.13.1",
+  "version": "3.13.2",
   "description": "The JavaScript based client SDK that can be used for client to server communication between you and the Ingenico ePayments platform",
   "main": "gulpfile.js",
   "devDependencies": {
@@ -13,6 +13,10 @@
     "gulp-uglify": "^2.0.0",
     "gulp-usemin": "^0.3.29",
     "node-forge": "^0.6.42"
+  },
+  "scripts": {
+    "watch": "gulp watch",
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",

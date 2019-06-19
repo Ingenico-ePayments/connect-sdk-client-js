@@ -29,7 +29,7 @@ var fullSdkSrc = [
   'src/core.js',
   'src/promise.js',
   'src/net.js',
-  'src/util.js',
+  'src/Util.js',
   'src/GooglePay.js',
   'src/PublicKeyResponse.js',
   'src/C2SCommunicatorConfiguration.js',
@@ -80,7 +80,7 @@ var sdkSrcNoEncryption = [
   'src/core.js',
   'src/promise.js',
   'src/net.js',
-  'src/util.js',
+  'src/Util.js',
   'src/GooglePay.js',
   'src/PublicKeyResponse.js',
   'src/C2SCommunicatorConfiguration.js',
@@ -159,6 +159,10 @@ gulp.task('clean', function (cb) {
 });
 
 gulp.task('build', ['createFullSdk', 'createSdkNoEncryption']);
+
+gulp.task('watch', function () {
+  gulp.watch(['src/*.js'], ['build'])
+});
 
 gulp.task('default', function () {
   console.error('no default task! use gulp --tasks');

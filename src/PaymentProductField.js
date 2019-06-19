@@ -18,7 +18,10 @@ define("connectsdk.PaymentProductField", ["connectsdk.core", "connectsdk.Payment
 			// isValid checks all datarestrictions
 			var validators = this.dataRestrictions.validationRules;
 			var hasError = false;
-			value = this.removeMask(value);
+
+			// Apply masking value first
+			var maskedValue = this.applyMask(value);
+			value = this.removeMask(maskedValue.formattedValue);
 			for (var i = 0, il = validators.length; i < il; i++) {
 				var validator = validators[i];
 				if (!validator.validate(value)) {

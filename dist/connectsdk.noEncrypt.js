@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.13.1',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.13.2',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -2050,6 +2050,10 @@ define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"
         this.fiscalNumberLength = json.attributes.fiscalNumberLength;
 		
 		this.validate = function (value, fiscalNumberValue) {
+			if (typeof fiscalNumberValue === 'undefined') {
+				fiscalNumberValue = '';
+			}
+
 			return (fiscalNumberValue.length === this.fiscalNumberLength && value.length > 0) || fiscalNumberValue.length !== this.fiscalNumberLength;
 		};
 	};
@@ -2276,7 +2280,10 @@ define("connectsdk.PaymentProductField", ["connectsdk.core", "connectsdk.Payment
 			// isValid checks all datarestrictions
 			var validators = this.dataRestrictions.validationRules;
 			var hasError = false;
-			value = this.removeMask(value);
+
+			// Apply masking value first
+			var maskedValue = this.applyMask(value);
+			value = this.removeMask(maskedValue.formattedValue);
 			for (var i = 0, il = validators.length; i < il; i++) {
 				var validator = validators[i];
 				if (!validator.validate(value)) {

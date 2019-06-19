@@ -7,6 +7,10 @@ define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"
         this.fiscalNumberLength = json.attributes.fiscalNumberLength;
 		
 		this.validate = function (value, fiscalNumberValue) {
+			if (typeof fiscalNumberValue === 'undefined') {
+				fiscalNumberValue = '';
+			}
+
 			return (fiscalNumberValue.length === this.fiscalNumberLength && value.length > 0) || fiscalNumberValue.length !== this.fiscalNumberLength;
 		};
 	};
