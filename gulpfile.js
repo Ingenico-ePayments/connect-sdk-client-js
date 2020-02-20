@@ -1,7 +1,6 @@
 var gulp       = require('gulp'),
     concat     = require('gulp-concat'),
-    uglify     = require('gulp-uglify'),
-    usemin     = require('gulp-usemin'),
+    uglify     = require('gulp-uglify-es').default,
     rimraf     = require('gulp-rimraf'),
     sourcemaps = require('gulp-sourcemaps'),
     replace    = require('gulp-replace'),
@@ -9,23 +8,7 @@ var gulp       = require('gulp'),
     fs         = require('fs');
 
 var fullSdkSrc = [
-  'node_modules/node-forge/js/util.js',
-  'node_modules/node-forge/js/cipher.js',
-  'node_modules/node-forge/js/cipherModes.js',
-  'node_modules/node-forge/js/aes.js',
-  'node_modules/node-forge/js/oids.js',
-  'node_modules/node-forge/js/asn1.js',
-  'node_modules/node-forge/js/sha1.js',
-  'node_modules/node-forge/js/sha256.js',
-  'node_modules/node-forge/js/sha512.js',
-  'node_modules/node-forge/js/md.js',
-  'node_modules/node-forge/js/hmac.js',
-  'node_modules/node-forge/js/prng.js',
-  'node_modules/node-forge/js/random.js',
-  'node_modules/node-forge/js/jsbn.js',
-  'node_modules/node-forge/js/pkcs1.js',
-  'node_modules/node-forge/js/rsa.js',
-  'node_modules/node-forge/js/forge.js',
+  'node_modules/node-forge/dist/forge.min.js',
   'src/core.js',
   'src/promise.js',
   'src/net.js',
@@ -129,7 +112,7 @@ var sdkSrcNoEncryption = [
 
 var VERSION = fs.readFileSync('VERSION.TXT', 'utf8');
 
-gulp.task('createFullSdk', function () {
+gulp.task('createFullSdk', function (done) {
   gulp.src(fullSdkSrc)
     .pipe(sourcemaps.init())
     .pipe(concat('connectsdk.js'))
@@ -139,9 +122,10 @@ gulp.task('createFullSdk', function () {
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./dist/'));
+  done();
 });
 
-gulp.task('createSdkNoEncryption', function () {
+gulp.task('createSdkNoEncryption', function (done) {
   gulp.src(sdkSrcNoEncryption)
     .pipe(sourcemaps.init())
     .pipe(concat('connectsdk.noEncrypt.js'))
@@ -151,6 +135,7 @@ gulp.task('createSdkNoEncryption', function () {
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./dist/'));
+  done();
 });
 
 // clean folder
@@ -158,10 +143,10 @@ gulp.task('clean', function (cb) {
   return gulp.src('./dist', { read: false }).pipe(plumber()).pipe(rimraf());
 });
 
-gulp.task('build', ['createFullSdk', 'createSdkNoEncryption']);
+gulp.task('build', gulp.parallel('createFullSdk', 'createSdkNoEncryption'));
 
 gulp.task('watch', function () {
-  gulp.watch(['src/*.js'], ['build'])
+  gulp.watch(['src/*.js'], gulp.series('build'))
 });
 
 gulp.task('default', function () {
