@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.13.3',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.14.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -2010,6 +2010,53 @@ define("connectsdk.ValidationRuleRegularExpression", ["connectsdk.core"], functi
 	connectsdk.ValidationRuleRegularExpression = ValidationRuleRegularExpression;
 	return ValidationRuleRegularExpression;
 });
+define("connectsdk.ValidationRuleResidentIdNumber", ["connectsdk.core"], function(connectsdk) {
+
+	var ValidationRuleResidentIdNumber = function (json) {
+		this.json = json;
+        this.type = json.type,
+        this.errorMessageId = json.type;
+
+        // https://en.wikipedia.org/wiki/Resident_Identity_Card
+		var weights = [];
+		// storing weights in the reverse order so that we can begin
+		// from the 0th position of ID while calculating checksum
+		for(var i=18; i > 0; i--) {
+			weights.push(Math.pow(2, i-1) % 11);
+		}
+
+		this.validate = function (value) {
+			if(value.length < 15) {
+				return false;
+			}
+
+			if(value.length == 15) {
+				return !isNaN(value);
+			}
+
+			if(value.length < 18 || value.length > 18) {
+				return false;
+			}
+
+            var sum = 0;
+            for(var i = 0; i < value.length-1; i++) {
+            	sum += value.charAt(i) * weights[i];
+            }
+
+            var checkSum = (12 - (sum % 11)) % 11;
+            var csChar = value.charAt(17);
+
+            if(checkSum < 10) {
+               return (checkSum == csChar); // check only values
+            }
+
+		    return (csChar === 'X'); // check the type as well
+		};
+	};
+
+	connectsdk.ValidationRuleResidentIdNumber = ValidationRuleResidentIdNumber;
+	return ValidationRuleResidentIdNumber;
+});
 define("connectsdk.ValidationRuleEmailAddress", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleEmailAddress = function(json) {
@@ -2147,18 +2194,31 @@ define('connectsdk.ValidationRuleIban', ['connectsdk.core'], function (connectsd
   connectsdk.ValidationRuleIban = ValidationRuleIban;
   return ValidationRuleIban;
 });
-define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleBoletoBancarioRequiredness", "connectsdk.ValidationRuleIban"], function (connectsdk, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleBoletoBancarioRequiredness, ValidationRuleIban) {
+define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleBoletoBancarioRequiredness", "connectsdk.ValidationRuleIban", "connectsdk.ValidationRuleResidentIdNumber"], function (connectsdk, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleBoletoBancarioRequiredness, ValidationRuleIban, ValidationRuleResidentIdNumber) {
 
+    
+    var validationRules = {
+        EmailAddress : ValidationRuleEmailAddress, 
+        TermsAndConditions: ValidationRuleTermsAndConditions, 
+        ExpirationDate : ValidationRuleExpirationDate, 
+        FixedList : ValidationRuleFixedList, 
+        Length : ValidationRuleLength, 
+        Luhn: ValidationRuleLuhn, 
+        Range: ValidationRuleRange, 
+        RegularExpression: ValidationRuleRegularExpression, 
+        BoletoBancarioRequiredness: ValidationRuleBoletoBancarioRequiredness, 
+        Iban: ValidationRuleIban,
+        ResidentIdNumber: ValidationRuleResidentIdNumber
+    }
+    
+    
     var ValidationRuleFactory = function () {
-
         this.makeValidator = function (json) {
-            // create new class based on the rule
             try {
-                var classType = json.type.charAt(0).toUpperCase() + json.type.slice(1), // camel casing
-                    className = eval("ValidationRule" + classType);
-                return new className(json);
+                var rule = json.type.charAt(0).toUpperCase() + json.type.slice(1);
+                return new validationRules[rule](json);
             } catch (e) {
-                console.warn('no validator for ', classType);
+                console.warn('no validator for ', rule);
             }
             return null;
         };
@@ -2167,7 +2227,7 @@ define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.Valid
     connectsdk.ValidationRuleFactory = ValidationRuleFactory;
     return ValidationRuleFactory;
 });
-define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleIban", "connectsdk.ValidationRuleFactory"], function(connectsdk, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleIban, ValidationRuleFactory) {
+define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleIban", "connectsdk.ValidationRuleResidentIdNumber", "connectsdk.ValidationRuleFactory"], function(connectsdk, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleIban, ValidationRuleResidentIdNumber, ValidationRuleFactory) {
 
 	var DataRestrictions = function (json, mask) {
 
