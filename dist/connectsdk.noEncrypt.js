@@ -71,7 +71,6 @@ define('connectsdk.promise', ['connectsdk.core'], function(turing) {
 			}
 		}
 
-
 		Promise.prototype = {
 			/**
 			 * Adds a success and failure handler for completion of this Promise object.
@@ -107,6 +106,7 @@ define('connectsdk.promise', ['connectsdk.core'], function(turing) {
 
 	return connectsdk.Promise;
 });
+
 define('connectsdk.net', ['connectsdk.core'], function(connectsdk) {
   var net = {};
 
@@ -253,7 +253,6 @@ define('connectsdk.net', ['connectsdk.core'], function(connectsdk) {
     if (connectsdk.Promise) {
       promise = new connectsdk.Promise();
     }
-
 
     function respondToReadyState(readyState) {
       if (request.readyState == 4) {
@@ -478,6 +477,7 @@ define('connectsdk.net', ['connectsdk.core'], function(connectsdk) {
   connectsdk.net = net;
   return net;
 });
+
 define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 
 	// Create a singleton from Util so the same util function can be used in different modules
@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.14.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.15.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -1806,7 +1806,7 @@ define("connectsdk.MaskingUtil", ["connectsdk.core", "connectsdk.MaskedString"],
 			}
 			return new MaskedString(newValue, cursor);
 		};
-		
+
 		this.getMaxLengthBasedOnMask = function (mask) {
 			if (mask) {
 				var maskc = mask.split(""),
@@ -1861,6 +1861,7 @@ define("connectsdk.MaskingUtil", ["connectsdk.core", "connectsdk.MaskedString"],
 	connectsdk.MaskingUtil = MaskingUtil;
 	return MaskingUtil;
 });
+
 define("connectsdk.ValidationRuleLuhn", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleLuhn = function (json) {
@@ -1870,7 +1871,7 @@ define("connectsdk.ValidationRuleLuhn", ["connectsdk.core"], function(connectsdk
 		this.validate = function (value) {
 			var luhnArr = [[0,2,4,6,8,1,3,5,7,9],[0,1,2,3,4,5,6,7,8,9]]
 				,sum = 0;
-				
+
 	   		value.replace(/\D+/g,"").replace(/[\d]/g, function(c, p, o) {
 		        sum += luhnArr[ (o.length-p)&1 ][ parseInt(c,10) ];
 		    });
@@ -1881,6 +1882,7 @@ define("connectsdk.ValidationRuleLuhn", ["connectsdk.core"], function(connectsdk
 	connectsdk.ValidationRuleLuhn = ValidationRuleLuhn;
 	return ValidationRuleLuhn;
 });
+
 define("connectsdk.ValidationRuleExpirationDate", ["connectsdk.core"], function (connectsdk) {
 
 	var _validateDateFormat = function (value) {
@@ -1941,7 +1943,7 @@ define("connectsdk.ValidationRuleFixedList", ["connectsdk.core"], function(conne
         this.type = json.type,
         this.errorMessageId = json.type;
 		this.allowedValues = json.attributes.allowedValues;
-		
+
 		this.validate = function (value) {
 			for (var i = 0, il = this.allowedValues.length; i < il; i++) {
 				if (this.allowedValues[i] === value) {
@@ -1955,6 +1957,7 @@ define("connectsdk.ValidationRuleFixedList", ["connectsdk.core"], function(conne
 	connectsdk.ValidationRuleFixedList = ValidationRuleFixedList;
 	return ValidationRuleFixedList;
 });
+
 define("connectsdk.ValidationRuleLength", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleLength = function (json) {
@@ -1963,7 +1966,7 @@ define("connectsdk.ValidationRuleLength", ["connectsdk.core"], function(connects
         this.errorMessageId = json.type;
         this.maxLength = json.attributes.maxLength;
 		this.minLength = json.attributes.minLength;
-		
+
 		this.validate = function (value) {
 			return this.minLength <= value.length && value.length <= this.maxLength;
 		};
@@ -1972,6 +1975,7 @@ define("connectsdk.ValidationRuleLength", ["connectsdk.core"], function(connects
 	connectsdk.ValidationRuleLength = ValidationRuleLength;
 	return ValidationRuleLength;
 });
+
 define("connectsdk.ValidationRuleRange", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleRange = function(json) {
@@ -1980,7 +1984,7 @@ define("connectsdk.ValidationRuleRange", ["connectsdk.core"], function(connectsd
         this.errorMessageId = json.type;
         this.maxValue = json.attributes.maxValue;
 		this.minValue = json.attributes.minValue;
-		
+
 		this.validate = function(value) {
 			if (isNaN(value)) {
 				return false;
@@ -1993,6 +1997,7 @@ define("connectsdk.ValidationRuleRange", ["connectsdk.core"], function(connectsd
 	connectsdk.ValidationRuleRange = ValidationRuleRange;
 	return ValidationRuleRange;
 });
+
 define("connectsdk.ValidationRuleRegularExpression", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleRegularExpression = function(json) {
@@ -2000,7 +2005,7 @@ define("connectsdk.ValidationRuleRegularExpression", ["connectsdk.core"], functi
         this.type = json.type,
         this.errorMessageId = json.type;
 		this.regularExpression = json.attributes.regularExpression;
-		
+
 		this.validate = function(value) {
 			var regexp = new RegExp(this.regularExpression);
 			return regexp.test(value);
@@ -2010,6 +2015,7 @@ define("connectsdk.ValidationRuleRegularExpression", ["connectsdk.core"], functi
 	connectsdk.ValidationRuleRegularExpression = ValidationRuleRegularExpression;
 	return ValidationRuleRegularExpression;
 });
+
 define("connectsdk.ValidationRuleResidentIdNumber", ["connectsdk.core"], function(connectsdk) {
 
 	var ValidationRuleResidentIdNumber = function (json) {
@@ -2095,7 +2101,7 @@ define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"
         this.type = json.type,
         this.errorMessageId = json.type;
         this.fiscalNumberLength = json.attributes.fiscalNumberLength;
-		
+
 		this.validate = function (value, fiscalNumberValue) {
 			if (typeof fiscalNumberValue === 'undefined') {
 				fiscalNumberValue = '';
@@ -2108,6 +2114,7 @@ define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"
 	connectsdk.ValidationRuleBoletoBancarioRequiredness = ValidationRuleBoletoBancarioRequiredness;
 	return ValidationRuleBoletoBancarioRequiredness;
 });
+
 define('connectsdk.ValidationRuleIban', ['connectsdk.core'], function (connectsdk) {
 
   /**
@@ -2196,22 +2203,20 @@ define('connectsdk.ValidationRuleIban', ['connectsdk.core'], function (connectsd
 });
 define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleBoletoBancarioRequiredness", "connectsdk.ValidationRuleIban", "connectsdk.ValidationRuleResidentIdNumber"], function (connectsdk, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleBoletoBancarioRequiredness, ValidationRuleIban, ValidationRuleResidentIdNumber) {
 
-    
     var validationRules = {
-        EmailAddress : ValidationRuleEmailAddress, 
-        TermsAndConditions: ValidationRuleTermsAndConditions, 
-        ExpirationDate : ValidationRuleExpirationDate, 
-        FixedList : ValidationRuleFixedList, 
-        Length : ValidationRuleLength, 
-        Luhn: ValidationRuleLuhn, 
-        Range: ValidationRuleRange, 
-        RegularExpression: ValidationRuleRegularExpression, 
-        BoletoBancarioRequiredness: ValidationRuleBoletoBancarioRequiredness, 
+        EmailAddress : ValidationRuleEmailAddress,
+        TermsAndConditions: ValidationRuleTermsAndConditions,
+        ExpirationDate : ValidationRuleExpirationDate,
+        FixedList : ValidationRuleFixedList,
+        Length : ValidationRuleLength,
+        Luhn: ValidationRuleLuhn,
+        Range: ValidationRuleRange,
+        RegularExpression: ValidationRuleRegularExpression,
+        BoletoBancarioRequiredness: ValidationRuleBoletoBancarioRequiredness,
         Iban: ValidationRuleIban,
         ResidentIdNumber: ValidationRuleResidentIdNumber
     }
-    
-    
+
     var ValidationRuleFactory = function () {
         this.makeValidator = function (json) {
             try {
@@ -2227,6 +2232,7 @@ define("connectsdk.ValidationRuleFactory", ["connectsdk.core", "connectsdk.Valid
     connectsdk.ValidationRuleFactory = ValidationRuleFactory;
     return ValidationRuleFactory;
 });
+
 define("connectsdk.DataRestrictions", ["connectsdk.core", "connectsdk.ValidationRuleExpirationDate", "connectsdk.ValidationRuleFixedList", "connectsdk.ValidationRuleLength", "connectsdk.ValidationRuleLuhn", "connectsdk.ValidationRuleRange", "connectsdk.ValidationRuleRegularExpression", "connectsdk.ValidationRuleEmailAddress", "connectsdk.ValidationRuleTermsAndConditions", "connectsdk.ValidationRuleIban", "connectsdk.ValidationRuleResidentIdNumber", "connectsdk.ValidationRuleFactory"], function(connectsdk, ValidationRuleExpirationDate, ValidationRuleFixedList, ValidationRuleLength, ValidationRuleLuhn, ValidationRuleRange, ValidationRuleRegularExpression, ValidationRuleEmailAddress, ValidationRuleTermsAndConditions, ValidationRuleIban, ValidationRuleResidentIdNumber, ValidationRuleFactory) {
 
 	var DataRestrictions = function (json, mask) {
@@ -2281,13 +2287,14 @@ define("connectsdk.FormElement", ["connectsdk.core", "connectsdk.ValueMappingEle
 		this.json = json;
 		this.type = json.type;
 		this.valueMapping = [];
-		
+
 		_parseJSON(json, this.valueMapping);
 	};
 
 	connectsdk.FormElement = FormElement;
 	return FormElement;
 });
+
 define("connectsdk.Tooltip", ["connectsdk.core"], function(connectsdk) {
 
 	var Tooltip = function (json) {
@@ -2941,7 +2948,13 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		};
 
 		this.getIinDetails = function (partialCreditCardNumber, paymentRequestPayload) {
-			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '').substring(0, 6);
+			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '');
+			if (partialCreditCardNumber.length >= 8) {
+				partialCreditCardNumber = partialCreditCardNumber.substring(0, 8);
+			} else {
+				partialCreditCardNumber = partialCreditCardNumber.substring(0, 6);
+			}
+
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
 			return _c2sCommunicator.getPaymentProductIdByCreditCardNumber(partialCreditCardNumber, c2SPaymentProductContext);
 		};

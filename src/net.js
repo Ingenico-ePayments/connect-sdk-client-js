@@ -145,7 +145,6 @@ define('connectsdk.net', ['connectsdk.core'], function(connectsdk) {
       promise = new connectsdk.Promise();
     }
 
-
     function respondToReadyState(readyState) {
       if (request.readyState == 4) {
         var contentType = request.mimeType || request.getResponseHeader('content-type') || '';

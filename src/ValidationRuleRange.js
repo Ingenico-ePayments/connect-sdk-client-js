@@ -6,7 +6,7 @@ define("connectsdk.ValidationRuleRange", ["connectsdk.core"], function(connectsd
         this.errorMessageId = json.type;
         this.maxValue = json.attributes.maxValue;
 		this.minValue = json.attributes.minValue;
-		
+
 		this.validate = function(value) {
 			if (isNaN(value)) {
 				return false;

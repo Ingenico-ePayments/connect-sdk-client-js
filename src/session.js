@@ -89,7 +89,13 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 		};
 
 		this.getIinDetails = function (partialCreditCardNumber, paymentRequestPayload) {
-			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '').substring(0, 6);
+			partialCreditCardNumber = partialCreditCardNumber.replace(/ /g, '');
+			if (partialCreditCardNumber.length >= 8) {
+				partialCreditCardNumber = partialCreditCardNumber.substring(0, 8);
+			} else {
+				partialCreditCardNumber = partialCreditCardNumber.substring(0, 6);
+			}
+
 			var c2SPaymentProductContext = new C2SPaymentProductContext(_paymentRequestPayload || paymentRequestPayload);
 			return _c2sCommunicator.getPaymentProductIdByCreditCardNumber(partialCreditCardNumber, c2SPaymentProductContext);
 		};

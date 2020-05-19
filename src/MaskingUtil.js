@@ -62,7 +62,7 @@ define("connectsdk.MaskingUtil", ["connectsdk.core", "connectsdk.MaskedString"],
 			}
 			return new MaskedString(newValue, cursor);
 		};
-		
+
 		this.getMaxLengthBasedOnMask = function (mask) {
 			if (mask) {
 				var maskc = mask.split(""),

@@ -30,7 +30,6 @@ define('connectsdk.promise', ['connectsdk.core'], function(turing) {
 			}
 		}
 
-
 		Promise.prototype = {
 			/**
 			 * Adds a success and failure handler for completion of this Promise object.

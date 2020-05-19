@@ -13,7 +13,7 @@ define("connectsdk.FormElement", ["connectsdk.core", "connectsdk.ValueMappingEle
 		this.json = json;
 		this.type = json.type;
 		this.valueMapping = [];
-		
+
 		_parseJSON(json, this.valueMapping);
 	};
 

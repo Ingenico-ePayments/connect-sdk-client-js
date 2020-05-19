@@ -5,7 +5,7 @@ define("connectsdk.ValidationRuleBoletoBancarioRequiredness", ["connectsdk.core"
         this.type = json.type,
         this.errorMessageId = json.type;
         this.fiscalNumberLength = json.attributes.fiscalNumberLength;
-		
+
 		this.validate = function (value, fiscalNumberValue) {
 			if (typeof fiscalNumberValue === 'undefined') {
 				fiscalNumberValue = '';
