@@ -385,6 +385,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 								}
 							} else {
 								iinDetailsResponse.status = "UNKNOWN";
+								iinDetailsResponse.json = res.responseJSON;
 								promise.reject(iinDetailsResponse);
 							}
 						});
