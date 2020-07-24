@@ -562,6 +562,31 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
+		this.createPaymentProductSession = function(paymentProductId, context) {
+
+			var promise = new Promise();
+			var cacheKey = "createPaymentProductSession_" + context.validationUrl + "_" + context.domainName + "_" + context.displayName;
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.post(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/sessions")
+					.data(JSON.stringify(context))
+					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							_cache[cacheKey] = res.responseJSON;
+							promise.resolve(res.responseJSON);
+						} else {
+							promise.reject(res.responseJSON);
+						}
+					});
+			}
+			return promise;
+		};
+
 		var constructCacheKeyFromKeyValues = function(prefix, values) {
 			var cacheKey = prefix;
 			for (var key in values){
