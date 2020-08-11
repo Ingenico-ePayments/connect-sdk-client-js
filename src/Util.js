@@ -83,7 +83,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 						}
 					}
 				},
-				paymentProductsThatAreNotSupportedInThisBrowser: [applePayPaymentProductId]
+				paymentProductsThatAreNotSupportedInThisBrowser: []
 			}
 		}
 

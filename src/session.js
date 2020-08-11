@@ -154,15 +154,25 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return _c2sCommunicator.createPaymentProductSession(paymentProductId, paymentRequestPayload);
 		};
 
+		this.createApplePayPayment = function (context, paymentProductSpecificInputs, networks) {
+			var promise = new Promise();
+			_c2sCommunicator.initApplePayPayment(context, paymentProductSpecificInputs, networks).then(function (res) {
+				promise.resolve(res)
+			}, function (res) {
+				promise.reject(res);
+			});
+			return promise;
+		}
+
 		/* In case a full JSON representation of a payment product is already available in context,
-		   this method can be used instead of getPaymentProduct for the same (but synchronous) result. */
-		this.transformPaymentProductJSON = function(json) {
+			 this method can be used instead of getPaymentProduct for the same (but synchronous) result. */
+		this.transformPaymentProductJSON = function (json) {
 			return new PaymentProduct(_c2sCommunicator.transformPaymentProductJSON(json))
 		};
 
 		/* In case a full JSON representation of a payment product group is already available in context,
-		   this method can be used instead of getPaymentProductGroup for the same (but synchronous) result. */
-		this.transformPaymentProductGroupJSON = function(json) {
+			 this method can be used instead of getPaymentProductGroup for the same (but synchronous) result. */
+		this.transformPaymentProductGroupJSON = function (json) {
 			return new PaymentProductGroup(_c2sCommunicator.transformPaymentProductJSON(json))
 		};
 	};

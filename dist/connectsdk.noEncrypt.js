@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.16.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.17.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -563,7 +563,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 						}
 					}
 				},
-				paymentProductsThatAreNotSupportedInThisBrowser: [applePayPaymentProductId]
+				paymentProductsThatAreNotSupportedInThisBrowser: []
 			}
 		}
 
@@ -745,6 +745,70 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
     return GooglePay;
 });
 
+define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connectsdk.Util"], function (connectsdk, Promise, Util) {
+
+    var _util = Util.getInstance();
+
+    var ApplePay = function () {
+        this.isApplePayAvailable = function () {
+            var applePayIsAvailable = window.ApplePaySession && window.ApplePaySession.canMakePayments();
+            if (!applePayIsAvailable) {
+                _util.paymentProductsThatAreNotSupportedInThisBrowser.push(_util.applePayPaymentProductId);
+            }
+            return applePayIsAvailable;
+        };
+        this.initPayment = function (context, C2SCommunicator) {
+            var promise = new Promise();
+            var _context = context;
+            var _C2SCommunicator = C2SCommunicator;
+
+            var payment = {
+                currencyCode: _context.currency,
+                countryCode: _context.countryCode,
+                total: {
+                    label: _context.displayName,
+                    amount: _context.totalAmount / 100,
+                },
+                supportedNetworks: _context.networks,
+                merchantCapabilities: ['supports3DS'],
+            };
+
+            var applePaySession = new ApplePaySession(1, payment);
+            applePaySession.begin();
+
+            applePaySession.onvalidatemerchant = function (event) {
+                _context.validationURL = event.validationURL;
+                _context.domainName = window.location.hostname;
+                _C2SCommunicator.createPaymentProductSession('302', _context).then(function (merchantSession) {
+                    try {
+                        applePaySession.completeMerchantValidation(JSON.parse(merchantSession.paymentProductSession302SpecificOutput.sessionObject));
+                    } catch {
+                        promise.reject({message: 'Error completing merchant validation'});
+                        applePaySession.abort();
+                    }
+                }, function () {
+                    promise.reject({message: 'Error completing merchant validation'});
+                    applePaySession.abort();
+                })
+            };
+
+            applePaySession.onpaymentauthorized = function (event) {
+                if (!event.payment.token) {
+                    status = ApplePaySession.STATUS_FAILURE;
+                    promise.reject({message: 'Error payment authorization'});
+                } else {
+                    status = ApplePaySession.STATUS_SUCCESS;
+                    promise.resolve({message: 'Payment authorized', data: event.payment.token});
+                    applePaySession.completePayment(status);
+                }
+            };
+            return promise;
+        };
+    }
+
+    connectsdk.ApplePay = ApplePay;
+    return ApplePay;
+});
 define("connectsdk.PublicKeyResponse", ["connectsdk.core"], function(connectsdk) {
 
 	var PublicKeyResponse = function(json) {
@@ -947,7 +1011,7 @@ define("connectsdk.IinDetailsResponse", ["connectsdk.core", "connectsdk.promise"
 	connectsdk.IinDetailsResponse = IinDetailsResponse;
 	return IinDetailsResponse;
 });
-define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.GooglePay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse, GooglePay) {
+define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "connectsdk.net", "connectsdk.Util", "connectsdk.PublicKeyResponse", "connectsdk.IinDetailsResponse", "connectsdk.GooglePay", "connectsdk.ApplePay"], function (connectsdk, Promise, Net, Util, PublicKeyResponse, IinDetailsResponse, GooglePay, ApplePay) {
 	var C2SCommunicator = function (c2SCommunicatorConfiguration, paymentProduct) {
 		var _c2SCommunicatorConfiguration = c2SCommunicatorConfiguration;
 		var _util = Util.getInstance();
@@ -955,6 +1019,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 		var _providedPaymentProduct = paymentProduct;
 		var that = this;
 		var _GooglePay = new GooglePay(that);
+		var _ApplePay = new ApplePay(that);
 
 		var _mapType = {
 			"expirydate": "tel",
@@ -968,7 +1033,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return (url && endsWith(url, '/')) ? url : url + '/';
 		};
 
-		var formatImageUrl = function(url, imageUrl) {
+		var formatImageUrl = function (url, imageUrl) {
 			url = formatUrl(url);
 			// _cleanJSON can be called multiple times with the same data (which is cached between calls).
 			// Don't prepend the url after the first time.
@@ -978,11 +1043,11 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return url + imageUrl;
 		};
 
-		var startsWith = function(string, prefix) {
+		var startsWith = function (string, prefix) {
 			return string.indexOf(prefix) === 0;
 		};
 
-		var endsWith = function(string, suffix) {
+		var endsWith = function (string, suffix) {
 			return string.indexOf(suffix, string.length - suffix.length) !== -1;
 		};
 
@@ -1041,20 +1106,30 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return false;
 		};
 
-        var _getGooglePayData = function (list, paymentProductId) {
-            for (var i = list.length - 1, il = 0; i >= il; i--) {
-                var product = list[i];
-                if (product && (product.id === paymentProductId)) {
-                    return product.paymentProduct320SpecificData;
-                }
-            }
-            return false;
-        };
+		var _getGooglePayData = function (list, paymentProductId) {
+			for (var i = list.length - 1, il = 0; i >= il; i--) {
+				var product = list[i];
+				if (product && (product.id === paymentProductId)) {
+					return product.paymentProduct320SpecificData;
+				}
+			}
+			return false;
+		};
 
 		var metadata = _util.getMetadata();
 
+		var resolveGetBasicPaymentProducts = function(json, promise, cacheKey) {
+			_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
+			_cache[cacheKey] = json;
+			if (json.paymentProducts.length === 0) {
+				promise.reject('No payment products available');
+			} else {
+				promise.resolve(json);
+			}
+		}
+
 		this.getBasicPaymentProducts = function (context, paymentProductSpecificInputs) {
-			var cacheKeyLocale= context.locale ? context.locale + "_" : '';
+			var cacheKeyLocale = context.locale ? context.locale + "_" : '';
 			paymentProductSpecificInputs = paymentProductSpecificInputs || {};
 			var promise = new Promise()
 				, cacheBust = new Date().getTime()
@@ -1066,7 +1141,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				var urlParameterLocale = context.locale ? "&locale=" + context.locale: '';
+				var urlParameterLocale = context.locale ? "&locale=" + context.locale : '';
 				Net.get(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId
 					+ "/products" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
@@ -1074,39 +1149,22 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					.set('X-GCS-ClientMetaInfo', _util.base64Encode(metadata))
 					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
 					.end(function (res) {
+
 						if (res.success) {
 							var json = _extendLogoUrl(res.responseJSON, _c2SCommunicatorConfiguration.assetUrl, "s");
-							if (_isPaymentProductInList(json.paymentProducts, _util.googlePayPaymentProductId)) {
-								if (_GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
-									var googlePayData = _getGooglePayData(json.paymentProducts, _util.googlePayPaymentProductId);
-									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, googlePayData).then(function (isGooglePayAvailable) {
-										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
-										if (json.paymentProducts.length === 0) {
-											promise.reject('No payment products available');
-										}
-										_cache[cacheKey] = json;
-										promise.resolve(json);
-									}, function () {
-										_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
-										if (json.paymentProducts.length === 0) {
-											promise.reject('No payment products available');
-										}
-										_cache[cacheKey] = json;
-										promise.resolve(json);
-									});
-								} else {
-									//GooglePay does not have merchantId
-									_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
-									console.warn('You have not provided a merchantId for Google Pay, you can set this in the paymentProductSpecificInputs object');
-									promise.resolve(json);
-								}
+							if (_isPaymentProductInList(json.paymentProducts, _util.applePayPaymentProductId)) {
+								_ApplePay.isApplePayAvailable()
+							}
+							if (_isPaymentProductInList(json.paymentProducts, _util.googlePayPaymentProductId)
+								&& _GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+								var googlePayData = _getGooglePayData(json.paymentProducts, _util.googlePayPaymentProductId);
+								_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, googlePayData).then(function () {
+									resolveGetBasicPaymentProducts(json, promise, cacheKey);
+								}, function () {
+									resolveGetBasicPaymentProducts(json, promise, cacheKey);
+								});
 							} else {
-								_util.filterOutProductsThatAreNotSupportedInThisBrowser(json);
-								if (json.paymentProducts.length === 0) {
-									promise.reject('No payment products available');
-								}
-								_cache[cacheKey] = json;
-								promise.resolve(json);
+								resolveGetBasicPaymentProducts(json, promise, cacheKey);
 							}
 						} else {
 							promise.reject('failed to retrieve Basic Payment Products', res);
@@ -1128,7 +1186,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				var urlParameterLocale = context.locale ? "&locale=" + context.locale: '';
+				var urlParameterLocale = context.locale ? "&locale=" + context.locale : '';
 				Net.get(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups" + "?countryCode=" + context.countryCode + "&isRecurring=" + context.isRecurring
 					+ "&amount=" + context.totalAmount + "&currencyCode=" + context.currency
@@ -1181,16 +1239,16 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						promise.resolve(_cache[cacheKey]);
 					}, 0);
 				} else {
-					var urlParameterlocale = context.locale ? "&locale=" + context.locale: '';
+					var urlParameterlocale = context.locale ? "&locale=" + context.locale : '';
 					var getPaymentProductUrl = formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId
 						+ "/products/" + paymentProductId + "?countryCode=" + context.countryCode
 						+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
 						+ "&currencyCode=" + context.currency + urlParameterlocale;
 
 					if ((paymentProductId === _util.bancontactPaymentProductId) &&
-					paymentProductSpecificInputs &&
-					paymentProductSpecificInputs.bancontact &&
-					paymentProductSpecificInputs.bancontact.forceBasicFlow) {
+						paymentProductSpecificInputs &&
+						paymentProductSpecificInputs.bancontact &&
+						paymentProductSpecificInputs.bancontact.forceBasicFlow) {
 						// Add query parameter to products call to force basic flow for bancontact
 						getPaymentProductUrl += "&forceBasicFlow=" + paymentProductSpecificInputs.bancontact.forceBasicFlow
 					}
@@ -1203,30 +1261,25 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 						.end(function (res) {
 							if (res.success) {
 								var cleanedJSON = _cleanJSON(res.responseJSON, c2SCommunicatorConfiguration.assetUrl);
-								if (paymentProductId === _util.googlePayPaymentProductId) {
-									if (_GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
-                                        var networks = cleanedJSON.paymentProduct320SpecificData.networks;
-										_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, networks).then(function (isGooglePayAvailable) {
-											if (isGooglePayAvailable) {
-												_cache[cacheKey] = cleanedJSON;
-												promise.resolve(cleanedJSON);
-											} else {
-												_cache[cacheKey] = cleanedJSON;
-												//_isGooglePayAvailable returned false so google pay is not available, so reject getPaymentProduct
-												promise.reject(cleanedJSON);
-											}
-										}, function () {
-											_cache[cacheKey] = cleanedJSON;
-											//_isGooglePayAvailable rejected so not available
+								_cache[cacheKey] = cleanedJSON;
+								if (paymentProductId === _util.applePayPaymentProductId && !_ApplePay.isApplePayAvailable()) {
+									// ApplePay is available in the payment context but the client does not support it.
+									promise.reject(cleanedJSON);
+								} else if (paymentProductId === _util.googlePayPaymentProductId
+									&& _GooglePay.isMerchantIdProvided(paymentProductSpecificInputs)) {
+									var networks = cleanedJSON.paymentProduct320SpecificData.networks;
+									_GooglePay.isGooglePayAvailable(context, paymentProductSpecificInputs, networks).then(function (isGooglePayAvailable) {
+										if (isGooglePayAvailable) {
+											promise.resolve(cleanedJSON);
+										} else {
+											//_isGooglePayAvailable returned false so google pay is not available, so reject getPaymentProduct
 											promise.reject(cleanedJSON);
-										});
-									} else {
-										_cache[cacheKey] = cleanedJSON;
-										// merchantId is not provided so reject
+										}
+									}, function () {
+										//_isGooglePayAvailable rejected so not available
 										promise.reject(cleanedJSON);
-									}
+									});
 								} else {
-									_cache[cacheKey] = cleanedJSON;
 									promise.resolve(cleanedJSON);
 								}
 							} else {
@@ -1261,7 +1314,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 					promise.resolve(_cache[cacheKey]);
 				}, 0);
 			} else {
-				var urlParameterlocale = context.locale ? "&locale=" + context.locale: '';
+				var urlParameterlocale = context.locale ? "&locale=" + context.locale : '';
 				Net.get(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId
 					+ "/productgroups/" + paymentProductGroupId + "?countryCode=" + context.countryCode
 					+ "&isRecurring=" + context.isRecurring + "&amount=" + context.totalAmount
@@ -1485,8 +1538,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		this.getCustomerDetails = function(paymentProductId, context) {
-
+		this.getCustomerDetails = function (paymentProductId, context) {
 			var promise = new Promise();
 			var cacheKey = "getCustomerDetails_" + context.countryCode;
 			cacheKey = constructCacheKeyFromKeyValues(cacheKey, context.values);
@@ -1511,9 +1563,55 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return promise;
 		};
 
-		var constructCacheKeyFromKeyValues = function(prefix, values) {
+		this.createPaymentProductSession = function (paymentProductId, context) {
+			var promise = new Promise();
+			var cacheKey = "createPaymentProductSession_" + context.validationURL + "_" + context.domainName + "_" + context.displayName;
+			var requestParameters = {
+				"paymentProductSession302SpecificInput": {
+					"validationUrl": context.validationURL,
+					"domainName": context.domainName,
+					"displayName": context.displayName
+				}
+			};
+			if (_cache[cacheKey]) {
+				setTimeout(function () {
+					promise.resolve(_cache[cacheKey]);
+				}, 0);
+			} else {
+				Net.post(formatUrl(_c2SCommunicatorConfiguration.clientApiUrl) + _c2SCommunicatorConfiguration.customerId + "/products/" + paymentProductId + "/sessions")
+					.data(JSON.stringify(requestParameters))
+					.set("X-GCS-ClientMetaInfo", _util.base64Encode(metadata))
+					.set('Authorization', 'GCS v1Client:' + _c2SCommunicatorConfiguration.clientSessionId)
+					.end(function (res) {
+						if (res.success) {
+							_cache[cacheKey] = res.responseJSON;
+							promise.resolve(res.responseJSON);
+						} else {
+							promise.reject(res.responseJSON);
+						}
+					});
+			}
+			return promise;
+		};
+
+		this.initApplePayPayment = function (context, paymentProductSpecificInputs, networks) {
+			var promise = new Promise();
+			var _context = context;
+			_context.displayName = paymentProductSpecificInputs.merchantName;
+			_context.networks = networks;
+
+			_ApplePay.initPayment(_context, this).then(function (res) {
+				promise.resolve(res);
+			}, function (res) {
+				promise.reject(res);
+			});
+			return promise;
+		}
+
+
+		var constructCacheKeyFromKeyValues = function (prefix, values) {
 			var cacheKey = prefix;
-			for (var key in values){
+			for (var key in values) {
 				if (values.hasOwnProperty(key)) {
 					cacheKey += "_" + values[key].key + "_" + values[key].value;
 				}
@@ -1521,10 +1619,10 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			return cacheKey;
 		};
 
-        /* Transforms the JSON representation of a payment product (group) so it matches the result of getPaymentProduct and getPaymentProductGroup. */
-        this.transformPaymentProductJSON = function (json) {
-            return _cleanJSON(json, _c2SCommunicatorConfiguration.assetUrl)
-        };
+		/* Transforms the JSON representation of a payment product (group) so it matches the result of getPaymentProduct and getPaymentProductGroup. */
+		this.transformPaymentProductJSON = function (json) {
+			return _cleanJSON(json, _c2SCommunicatorConfiguration.assetUrl)
+		};
 	};
 
 	connectsdk.C2SCommunicator = C2SCommunicator;
@@ -3009,15 +3107,29 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			return _c2sCommunicator.getCustomerDetails(paymentProductId, paymentRequestPayload);
 		};
 
+		this.createPaymentProductSession = function (paymentProductId, paymentRequestPayload) {
+			return _c2sCommunicator.createPaymentProductSession(paymentProductId, paymentRequestPayload);
+		};
+
+		this.createApplePayPayment = function (context, paymentProductSpecificInputs, networks) {
+			var promise = new Promise();
+			_c2sCommunicator.initApplePayPayment(context, paymentProductSpecificInputs, networks).then(function (res) {
+				promise.resolve(res)
+			}, function (res) {
+				promise.reject(res);
+			});
+			return promise;
+		}
+
 		/* In case a full JSON representation of a payment product is already available in context,
-		   this method can be used instead of getPaymentProduct for the same (but synchronous) result. */
-		this.transformPaymentProductJSON = function(json) {
+			 this method can be used instead of getPaymentProduct for the same (but synchronous) result. */
+		this.transformPaymentProductJSON = function (json) {
 			return new PaymentProduct(_c2sCommunicator.transformPaymentProductJSON(json))
 		};
 
 		/* In case a full JSON representation of a payment product group is already available in context,
-		   this method can be used instead of getPaymentProductGroup for the same (but synchronous) result. */
-		this.transformPaymentProductGroupJSON = function(json) {
+			 this method can be used instead of getPaymentProductGroup for the same (but synchronous) result. */
+		this.transformPaymentProductGroupJSON = function (json) {
 			return new PaymentProductGroup(_c2sCommunicator.transformPaymentProductJSON(json))
 		};
 	};
