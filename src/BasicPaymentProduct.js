@@ -26,7 +26,8 @@ define("connectsdk.BasicPaymentProduct", ["connectsdk.core", "connectsdk.Account
 		this.accountOnFileById = {};
 		this.allowsRecurring = json.allowsRecurring;
 		this.allowsTokenization = json.allowsTokenization;
-		this.autoTokenized  = json.autoTokenized ;
+		this.autoTokenized = json.autoTokenized;
+		this.allowsInstallments = json.allowsInstallments;
 		this.displayHints = new PaymentProductDisplayHints(json.displayHints);
 		this.id = json.id;
 		this.maxAmount = json.maxAmount;

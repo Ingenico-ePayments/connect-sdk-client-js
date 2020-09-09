@@ -186,7 +186,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							_cache[cacheKey] = json;
 							promise.resolve(json);
 						} else {
-							promise.reject();
+							promise.reject(res.responseJSON);
 						}
 					});
 			}
@@ -314,7 +314,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							_cache[cacheKey] = cleanedJSON;
 							promise.resolve(cleanedJSON);
 						} else {
-							promise.reject();
+							promise.reject(res.responseJSON);
 						}
 					});
 			}
@@ -374,6 +374,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 								}
 							} else {
 								iinDetailsResponse.status = "UNKNOWN";
+								iinDetailsResponse.json = res.responseJSON;
 								promise.reject(iinDetailsResponse);
 							}
 						});
@@ -454,7 +455,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 							_cache[cacheKey] = res.responseJSON;
 							promise.resolve(res.responseJSON);
 						} else {
-							promise.reject();
+							promise.reject(res.responseJSON);
 						}
 					});
 			}

@@ -36,11 +36,11 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
                     try {
                         applePaySession.completeMerchantValidation(JSON.parse(merchantSession.paymentProductSession302SpecificOutput.sessionObject));
                     } catch {
-                        promise.reject({message: 'Error completing merchant validation'});
+                        promise.reject({ message: 'Error completing merchant validation' });
                         applePaySession.abort();
                     }
                 }, function () {
-                    promise.reject({message: 'Error completing merchant validation'});
+                    promise.reject({ message: 'Error completing merchant validation' });
                     applePaySession.abort();
                 })
             };
@@ -48,10 +48,11 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
             applePaySession.onpaymentauthorized = function (event) {
                 if (!event.payment.token) {
                     status = ApplePaySession.STATUS_FAILURE;
-                    promise.reject({message: 'Error payment authorization'});
+                    promise.reject({ message: 'Error payment authorization' });
+                    applePaySession.completePayment(status);
                 } else {
                     status = ApplePaySession.STATUS_SUCCESS;
-                    promise.resolve({message: 'Payment authorized', data: event.payment.token});
+                    promise.resolve({ message: 'Payment authorized', data: event.payment.token });
                     applePaySession.completePayment(status);
                 }
             };

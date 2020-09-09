@@ -57,6 +57,7 @@ package "client API response wrappers" <<Rect>> {
 		+Boolean allowsRecurring
 		+Boolean allowsTokenization
 		+Boolean autoTokenized
+		+Boolean allowsInstallments
 		+MobileIntegrationLevel mobileIntegrationLevel
 		+DisplayHints displayHints
 		+Number minAmount

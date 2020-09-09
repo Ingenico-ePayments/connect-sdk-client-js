@@ -16,8 +16,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 				_paymentRequestPayload = paymentRequestPayload;
 				var paymentProducts = new BasicPaymentProducts(json);
 				promise.resolve(paymentProducts);
-			}, function () {
-				promise.reject();
+			}, function (reason) {
+				promise.reject(reason);
 			});
 			return promise;
 		};
@@ -29,8 +29,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 				_paymentRequestPayload = paymentRequestPayload;
 				var paymentProductGroups = new BasicPaymentProductGroups(json);
 				promise.resolve(paymentProductGroups);
-			}, function () {
-				promise.reject();
+			}, function (reason) {
+				promise.reject(reason);
 			});
 			return promise;
 		};
@@ -43,18 +43,18 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 					_session.getBasicPaymentProductGroups(paymentRequestPayload).then(function (groups) {
 						var basicPaymentItems = new BasicPaymentItems(products, groups);
 						promise.resolve(basicPaymentItems);
-					}, function () {
-						promise.reject();
+					}, function (reason) {
+						promise.reject(reason);
 					});
-				}, function () {
-					promise.reject();
+				}, function (reason) {
+					promise.reject(reason);
 				});
 			} else {
 				_session.getBasicPaymentProducts(paymentRequestPayload, paymentProductSpecificInputs).then(function (products) {
 					var basicPaymentItems = new BasicPaymentItems(products, null);
 					promise.resolve(basicPaymentItems);
-				}, function () {
-					promise.reject();
+				}, function (reason) {
+					promise.reject(reason);
 				});
 			}
 			return promise;
@@ -67,9 +67,9 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			_c2sCommunicator.getPaymentProduct(paymentProductId, c2SPaymentProductContext, paymentProductSpecificInputs).then(function (response) {
 				_paymentProduct = new PaymentProduct(response);
 				promise.resolve(_paymentProduct);
-			}, function () {
+			}, function (reason) {
 				_paymentProduct = null;
-				promise.reject();
+				promise.reject(reason);
 			});
 			return promise;
 		};
@@ -81,9 +81,9 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			_c2sCommunicator.getPaymentProductGroup(paymentProductGroupId, c2SPaymentProductContext).then(function (response) {
 				_paymentProductGroup = new PaymentProductGroup(response);
 				promise.resolve(_paymentProductGroup);
-			}, function () {
+			}, function (reason) {
 				_paymentProductGroup = null;
-				promise.reject();
+				promise.reject(reason);
 			});
 			return promise;
 		};
@@ -110,8 +110,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			_c2sCommunicator.getPaymentProductNetworks(paymentProductId, c2SPaymentProductContext).then(function (response) {
 				_paymentRequestPayload = paymentRequestPayload;
 				promise.resolve(response);
-			}, function () {
-				promise.reject();
+			}, function (reason) {
+				promise.reject(reason);
 			});
 			return promise;
 		};
@@ -140,8 +140,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			var promise = new Promise();
 			_c2sCommunicator.getThirdPartyPaymentStatus(paymentId).then(function (response) {
 				promise.resolve(response);
-			}, function () {
-				promise.reject();
+			}, function (reason) {
+				promise.reject(reason);
 			});
 			return promise;
 		};
@@ -158,8 +158,8 @@ define("connectsdk.Session", ["connectsdk.core", "connectsdk.C2SCommunicator", "
 			var promise = new Promise();
 			_c2sCommunicator.initApplePayPayment(context, paymentProductSpecificInputs, networks).then(function (res) {
 				promise.resolve(res)
-			}, function (res) {
-				promise.reject(res);
+			}, function (reason) {
+				promise.reject(reason);
 			});
 			return promise;
 		}
