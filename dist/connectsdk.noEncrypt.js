@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.18.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.18.1',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -783,11 +783,11 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
                     try {
                         applePaySession.completeMerchantValidation(JSON.parse(merchantSession.paymentProductSession302SpecificOutput.sessionObject));
                     } catch {
-                        promise.reject({message: 'Error completing merchant validation'});
+                        promise.reject({ message: 'Error completing merchant validation' });
                         applePaySession.abort();
                     }
                 }, function () {
-                    promise.reject({message: 'Error completing merchant validation'});
+                    promise.reject({ message: 'Error completing merchant validation' });
                     applePaySession.abort();
                 })
             };
@@ -795,10 +795,11 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
             applePaySession.onpaymentauthorized = function (event) {
                 if (!event.payment.token) {
                     status = ApplePaySession.STATUS_FAILURE;
-                    promise.reject({message: 'Error payment authorization'});
+                    promise.reject({ message: 'Error payment authorization' });
+                    applePaySession.completePayment(status);
                 } else {
                     status = ApplePaySession.STATUS_SUCCESS;
-                    promise.resolve({message: 'Payment authorized', data: event.payment.token});
+                    promise.resolve({ message: 'Payment authorized', data: event.payment.token });
                     applePaySession.completePayment(status);
                 }
             };
