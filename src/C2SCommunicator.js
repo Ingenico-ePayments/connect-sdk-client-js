@@ -586,6 +586,9 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			var promise = new Promise();
 			var _context = context;
 			_context.displayName = paymentProductSpecificInputs.merchantName;
+			if (paymentProductSpecificInputs.acquirerCountry) {
+				_context.acquirerCountry = paymentProductSpecificInputs.acquirerCountry;
+			}
 			_context.networks = networks;
 
 			_ApplePay.initPayment(_context, this).then(function (res) {

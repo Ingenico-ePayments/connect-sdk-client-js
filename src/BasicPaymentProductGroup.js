@@ -14,6 +14,7 @@ define("connectsdk.BasicPaymentProductGroup", ["connectsdk.core", "connectsdk.Ac
 		this.json = json;
 		this.json.type = "group";
 		this.id = json.id;
+		this.acquirerCountry = json.acquirerCountry;
 		this.displayHints = new PaymentProductDisplayHints(json.displayHints);
 		this.accountsOnFile = [];
 		this.accountOnFileById = {};

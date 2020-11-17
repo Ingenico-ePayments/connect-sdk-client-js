@@ -28,6 +28,7 @@ define("connectsdk.BasicPaymentProduct", ["connectsdk.core", "connectsdk.Account
 		this.allowsTokenization = json.allowsTokenization;
 		this.autoTokenized = json.autoTokenized;
 		this.allowsInstallments = json.allowsInstallments;
+		this.acquirerCountry = json.acquirerCountry;
 		this.displayHints = new PaymentProductDisplayHints(json.displayHints);
 		this.id = json.id;
 		this.maxAmount = json.maxAmount;

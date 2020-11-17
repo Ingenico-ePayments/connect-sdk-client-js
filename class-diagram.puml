@@ -41,6 +41,7 @@ package "client API response wrappers" <<Rect>> {
 	interface BasicPaymentItem  #f2f2f2{
 		+JSON json
 		+String id
+		+String acquirerCountry
 		+DisplayHints displayHints
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById
@@ -58,6 +59,7 @@ package "client API response wrappers" <<Rect>> {
 		+Boolean allowsTokenization
 		+Boolean autoTokenized
 		+Boolean allowsInstallments
+		+String acquirerCountry
 		+MobileIntegrationLevel mobileIntegrationLevel
 		+DisplayHints displayHints
 		+Number minAmount
@@ -77,6 +79,7 @@ package "client API response wrappers" <<Rect>> {
 	class BasicPaymentProductGroup  #f2f2f2 {
 		+JSON json
 		+String id
+		+String acquirerCountry
 		+DisplayHints displayHints
 		+Array<AccountOnFile> accountsOnFile
 		+AssociativeArray<String, AccountOnFile> accountOnFileById

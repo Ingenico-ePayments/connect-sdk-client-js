@@ -15,9 +15,16 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
             var _context = context;
             var _C2SCommunicator = C2SCommunicator;
 
+            var _countryCode;
+            if (_context.acquirerCountry) {
+                _countryCode = _context.acquirerCountry;
+            } else {
+                _countryCode = _context.countryCode;
+            }
+
             var payment = {
                 currencyCode: _context.currency,
-                countryCode: _context.countryCode,
+                countryCode: _countryCode,
                 total: {
                     label: _context.displayName,
                     amount: _context.totalAmount / 100,

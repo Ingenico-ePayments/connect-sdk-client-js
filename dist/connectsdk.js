@@ -500,7 +500,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.18.1',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.19.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -764,9 +764,16 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
             var _context = context;
             var _C2SCommunicator = C2SCommunicator;
 
+            var _countryCode;
+            if (_context.acquirerCountry) {
+                _countryCode = _context.acquirerCountry;
+            } else {
+                _countryCode = _context.countryCode;
+            }
+
             var payment = {
                 currencyCode: _context.currency,
-                countryCode: _context.countryCode,
+                countryCode: _countryCode,
                 total: {
                     label: _context.displayName,
                     amount: _context.totalAmount / 100,
@@ -1602,6 +1609,9 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 			var promise = new Promise();
 			var _context = context;
 			_context.displayName = paymentProductSpecificInputs.merchantName;
+			if (paymentProductSpecificInputs.acquirerCountry) {
+				_context.acquirerCountry = paymentProductSpecificInputs.acquirerCountry;
+			}
 			_context.networks = networks;
 
 			_ApplePay.initPayment(_context, this).then(function (res) {
@@ -1794,6 +1804,7 @@ define("connectsdk.BasicPaymentProduct", ["connectsdk.core", "connectsdk.Account
 		this.allowsTokenization = json.allowsTokenization;
 		this.autoTokenized = json.autoTokenized;
 		this.allowsInstallments = json.allowsInstallments;
+		this.acquirerCountry = json.acquirerCountry;
 		this.displayHints = new PaymentProductDisplayHints(json.displayHints);
 		this.id = json.id;
 		this.maxAmount = json.maxAmount;
@@ -1825,6 +1836,7 @@ define("connectsdk.BasicPaymentProductGroup", ["connectsdk.core", "connectsdk.Ac
 		this.json = json;
 		this.json.type = "group";
 		this.id = json.id;
+		this.acquirerCountry = json.acquirerCountry;
 		this.displayHints = new PaymentProductDisplayHints(json.displayHints);
 		this.accountsOnFile = [];
 		this.accountOnFileById = {};
