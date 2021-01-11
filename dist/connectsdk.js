@@ -500,7 +500,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.19.0',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.19.1',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -702,7 +702,7 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
                 _gateway = googlePayData.gateway;
                 _networks = googlePayData.networks;
             } else {
-                _gateway = "ingenicoglobalcollect";
+                _gateway = "globalcollect";
                 _networks = googlePayData;
             }
             var promise = new Promise();

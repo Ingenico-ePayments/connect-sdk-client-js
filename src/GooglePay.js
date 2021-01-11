@@ -117,7 +117,7 @@ define("connectsdk.GooglePay", ["connectsdk.core", "connectsdk.promise", "connec
                 _gateway = googlePayData.gateway;
                 _networks = googlePayData.networks;
             } else {
-                _gateway = "ingenicoglobalcollect";
+                _gateway = "globalcollect";
                 _networks = googlePayData;
             }
             var promise = new Promise();
