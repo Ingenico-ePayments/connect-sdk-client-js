@@ -500,7 +500,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.19.1',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.19.2',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -2171,7 +2171,7 @@ define("connectsdk.ValidationRuleResidentIdNumber", ["connectsdk.core"], functio
                return (checkSum == csChar); // check only values
             }
 
-		    return (csChar === 'X'); // check the type as well
+		    return !!csChar && csChar.toUpperCase() === 'X'; // check the type as well
 		};
 	};
 

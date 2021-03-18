@@ -38,7 +38,7 @@ define("connectsdk.ValidationRuleResidentIdNumber", ["connectsdk.core"], functio
                return (checkSum == csChar); // check only values
             }
 
-		    return (csChar === 'X'); // check the type as well
+		    return !!csChar && csChar.toUpperCase() === 'X'; // check the type as well
 		};
 	};
 
