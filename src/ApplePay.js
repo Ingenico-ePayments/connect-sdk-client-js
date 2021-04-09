@@ -42,7 +42,7 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
                 _C2SCommunicator.createPaymentProductSession('302', _context).then(function (merchantSession) {
                     try {
                         applePaySession.completeMerchantValidation(JSON.parse(merchantSession.paymentProductSession302SpecificOutput.sessionObject));
-                    } catch {
+                    } catch (e) {
                         promise.reject({ message: 'Error completing merchant validation' });
                         applePaySession.abort();
                     }

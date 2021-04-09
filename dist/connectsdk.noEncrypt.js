@@ -498,7 +498,7 @@ define("connectsdk.Util", ["connectsdk.core"], function (connectsdk) {
 					return {
 						screenSize: window.innerWidth + "x" + window.innerHeight,
 						platformIdentifier: window.navigator.userAgent,
-						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.19.2',
+						sdkIdentifier: ((document.GC && document.GC.rppEnabledPage) ? 'rpp-' : '') + 'JavaScriptClientSDK/v3.20.0',
 						sdkCreator: 'Ingenico'
 					};
 				},
@@ -789,7 +789,7 @@ define("connectsdk.ApplePay", ["connectsdk.core", "connectsdk.promise", "connect
                 _C2SCommunicator.createPaymentProductSession('302', _context).then(function (merchantSession) {
                     try {
                         applePaySession.completeMerchantValidation(JSON.parse(merchantSession.paymentProductSession302SpecificOutput.sessionObject));
-                    } catch {
+                    } catch (e) {
                         promise.reject({ message: 'Error completing merchant validation' });
                         applePaySession.abort();
                     }
@@ -1415,6 +1415,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				"paymentContext": {
 					"countryCode": context.countryCode,
 					"isRecurring": context.isRecurring,
+					"isInstallments": context.isInstallments,
 					"amountOfMoney": {
 						"amount": context.totalAmount,
 						"currencyCode": context.currency
@@ -2782,6 +2783,8 @@ define("connectsdk.C2SPaymentProductContext", ["connectsdk.core"], function(conn
         if (typeof payload.locale !== 'undefined') {
             this.locale = payload.locale;
         }
+
+        this.isInstallments = payload.isInstallments || '';
 
         if (typeof payload.accountOnFileId !== 'undefined') {
             this.accountOnFileId = parseInt(payload.accountOnFileId);

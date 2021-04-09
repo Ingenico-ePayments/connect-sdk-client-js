@@ -10,6 +10,8 @@ define("connectsdk.C2SPaymentProductContext", ["connectsdk.core"], function(conn
             this.locale = payload.locale;
         }
 
+        this.isInstallments = payload.isInstallments || '';
+
         if (typeof payload.accountOnFileId !== 'undefined') {
             this.accountOnFileId = parseInt(payload.accountOnFileId);
         }

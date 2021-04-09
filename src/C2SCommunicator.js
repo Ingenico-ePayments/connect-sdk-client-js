@@ -394,6 +394,7 @@ define("connectsdk.C2SCommunicator", ["connectsdk.core", "connectsdk.promise", "
 				"paymentContext": {
 					"countryCode": context.countryCode,
 					"isRecurring": context.isRecurring,
+					"isInstallments": context.isInstallments,
 					"amountOfMoney": {
 						"amount": context.totalAmount,
 						"currencyCode": context.currency
