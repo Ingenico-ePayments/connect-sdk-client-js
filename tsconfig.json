@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES3",
+    "module": "AMD",
+    "declaration": true,
+    "outFile": "dist/index.js",
+    "strict": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "removeComments": false,
+    "noImplicitAny": false
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", ".npm", "dist", "**/__tests__/*"]
+}

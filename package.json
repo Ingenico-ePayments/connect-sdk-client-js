@@ -1,30 +1,102 @@
 {
   "name": "connect-sdk-client-js",
-  "version": "3.20.1",
+  "version": "4.0.0",
   "description": "The JavaScript based client SDK that can be used for client to server communication between you and the Ingenico ePayments platform",
-  "main": "gulpfile.js",
-  "devDependencies": {
-    "gulp": "^4.0.2",
-    "gulp-concat": "^2.6.1",
-    "gulp-plumber": "^1.2.1",
-    "gulp-replace": "^1.0.0",
-    "gulp-rimraf": "^0.2.2",
-    "gulp-sourcemaps": "^2.6.5",
-    "gulp-uglify-es": "^1.0.4",
-    "node-forge": "^0.10.0"
+  "homepage": "https://github.com/Ingenico-ePayments/connect-sdk-client-js#readme",
+  "bugs": {
+    "url": "https://github.com/Ingenico-ePayments/connect-sdk-client-js/issues"
   },
-  "scripts": {
-    "watch": "gulp watch",
-    "build": "gulp build"
-  },
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "author": "Ingenico ePayments",
+  "files": [
+    "dist",
+    "bower.json"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Ingenico-ePayments/connect-sdk-client-js.git"
   },
-  "author": "Ingenico ePayments",
-  "license": "SEE LICENSE IN LICENSE.txt",
-  "bugs": {
-    "url": "https://github.com/Ingenico-ePayments/connect-sdk-client-js/issues"
+  "scripts": {
+    "lint": "eslint ./src --ext .ts",
+    "format": "prettier --write \"**/*.+(json|ts|tsx)\"",
+    "format:check": "prettier --check \"**/*.+(json|ts|tsx)\"",
+    "typedoc": "typedoc dist",
+    "watch": "gulp watch",
+    "build": "npm run format:check && npm run lint && gulp build",
+    "test": "jest"
   },
-  "homepage": "https://github.com/Ingenico-ePayments/connect-sdk-client-js#readme"
+  "dependencies": {
+    "node-forge": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/applepayjs": "^3.0.3",
+    "@types/dateformat": "^3.0.1",
+    "@types/googlepay": "^0.6.3",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^8.10.66",
+    "@types/node-forge": "^1.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/parser": "^5.10.0",
+    "dateformat": "^4.5.1",
+    "del": "^6.0.0",
+    "eslint": "^8.7.0",
+    "gulp": "^4.0.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "gulp-uglify": "^3.0.2",
+    "husky": "^4.3.8",
+    "jest": "^27.4.7",
+    "jest-junit": "^13.0.0",
+    "jest-runner-groups": "^2.1.0",
+    "prettier": "^2.5.1",
+    "ts-jest": "^27.1.3",
+    "typedoc": "^0.17.8",
+    "typescript": "^4.4.4"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended"
+    ]
+  },
+  "prettier": {
+    "printWidth": 180
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run format:check && npm run lint"
+    }
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "runner": "groups",
+    "reporters": [
+      "default",
+      "jest-junit"
+    ],
+    "moduleNameMapper": {
+      "connectsdk\\.(.*)": "<rootDir>/src/$1.ts"
+    },
+    "globals": {
+      "ts-jest": {
+        "diagnostics": {
+          "ignoreCodes": [
+            "151001"
+          ]
+        }
+      }
+    }
+  },
+  "jest-junit": {
+    "includeShortConsoleOutput": "true"
+  }
 }

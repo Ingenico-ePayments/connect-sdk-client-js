@@ -1,0 +1,9 @@
+{
+  "name": "Ingenico Connect JavaScript SDK",
+  "readme": "README.md",
+  "includeDeclarations": true,
+  "exclude": ["**/node_modules/**"],
+  "excludePrivate": true,
+  "disableSources": true,
+  "hideGenerator": true
+}

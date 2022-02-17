@@ -1,156 +1,64 @@
-var gulp       = require('gulp'),
-    concat     = require('gulp-concat'),
-    uglify     = require('gulp-uglify-es').default,
-    rimraf     = require('gulp-rimraf'),
-    sourcemaps = require('gulp-sourcemaps'),
-    replace    = require('gulp-replace'),
-    plumber    = require('gulp-plumber'),
-    fs         = require('fs');
+/* eslint-disable */
+var gulp       = require('gulp');
+var ts         = require('gulp-typescript');
+var concat     = require('gulp-concat');
+var uglify     = require('gulp-uglify');
+var del        = require('del');
+var sourcemaps = require('gulp-sourcemaps');
+
+var sdkSrcNoEncryption = [
+  'src/browser-loader.js', // only needed to be able to use generated files in dist directly in the browser
+  'dist/index.js'          // created by TypeScript compiler
+];
 
 var fullSdkSrc = [
   'node_modules/node-forge/dist/forge.min.js',
-  'src/core.js',
-  'src/promise.js',
-  'src/net.js',
-  'src/Util.js',
-  'src/GooglePay.js',
-  'src/ApplePay.js',
-  'src/PublicKeyResponse.js',
-  'src/C2SCommunicatorConfiguration.js',
-  'src/IinDetailsResponse.js',
-  'src/C2SCommunicator.js',
-  'src/LabelTemplateElement.js',
-  'src/Attribute.js',
-  'src/AccountOnFileDisplayHints.js',
-  'src/AccountOnFile.js',
-  'src/PaymentProduct302SpecificData.js',
-  'src/PaymentProduct320SpecificData.js',
-  'src/PaymentProduct863SpecificData.js',
-  'src/PaymentProductDisplayHints.js',
-  'src/BasicPaymentProduct.js',
-  'src/BasicPaymentProductGroup.js',
-  'src/MaskedString.js',
-  'src/MaskingUtil.js',
-  'src/ValidationRuleLuhn.js',
-  'src/ValidationRuleExpirationDate.js',
-  'src/ValidationRuleFixedList.js',
-  'src/ValidationRuleLength.js',
-  'src/ValidationRuleRange.js',
-  'src/ValidationRuleRegularExpression.js',
-  'src/ValidationRuleResidentIdNumber.js',
-  'src/ValidationRuleEmailAddress.js',
-  'src/ValidationRuleTermsAndConditions.js',
-  'src/ValidationRuleBoletoBancarioRequiredness.js',
-  'src/ValidationRuleIban.js',
-  'src/ValidationRuleFactory.js',
-  'src/DataRestrictions.js',
-  'src/ValueMappingElement.js',
-  'src/FormElement.js',
-  'src/Tooltip.js',
-  'src/PaymentProductFieldDisplayHints.js',
-  'src/PaymentProductField.js',
-  'src/PaymentProduct.js',
-  'src/PaymentProductGroup.js',
-  'src/BasicPaymentProducts.js',
-  'src/BasicPaymentProductGroups.js',
-  'src/BasicPaymentItems.js',
-  'src/PaymentRequest.js',
-  'src/C2SPaymentProductContext.js',
-  'src/JOSEEncryptor.js',
-  'src/Encryptor.js',
-  'src/session.js'
+  ...sdkSrcNoEncryption
 ];
 
-var sdkSrcNoEncryption = [
-  'src/core.js',
-  'src/promise.js',
-  'src/net.js',
-  'src/Util.js',
-  'src/GooglePay.js',
-  'src/ApplePay.js',
-  'src/PublicKeyResponse.js',
-  'src/C2SCommunicatorConfiguration.js',
-  'src/IinDetailsResponse.js',
-  'src/C2SCommunicator.js',
-  'src/LabelTemplateElement.js',
-  'src/Attribute.js',
-  'src/AccountOnFileDisplayHints.js',
-  'src/AccountOnFile.js',
-  'src/PaymentProduct302SpecificData.js',
-  'src/PaymentProduct320SpecificData.js',
-  'src/PaymentProduct863SpecificData.js',
-  'src/PaymentProductDisplayHints.js',
-  'src/BasicPaymentProduct.js',
-  'src/BasicPaymentProductGroup.js',
-  'src/MaskedString.js',
-  'src/MaskingUtil.js',
-  'src/ValidationRuleLuhn.js',
-  'src/ValidationRuleExpirationDate.js',
-  'src/ValidationRuleFixedList.js',
-  'src/ValidationRuleLength.js',
-  'src/ValidationRuleRange.js',
-  'src/ValidationRuleRegularExpression.js',
-  'src/ValidationRuleResidentIdNumber.js',
-  'src/ValidationRuleEmailAddress.js',
-  'src/ValidationRuleTermsAndConditions.js',
-  'src/ValidationRuleBoletoBancarioRequiredness.js',
-  'src/ValidationRuleIban.js',
-  'src/ValidationRuleFactory.js',
-  'src/DataRestrictions.js',
-  'src/ValueMappingElement.js',
-  'src/FormElement.js',
-  'src/Tooltip.js',
-  'src/PaymentProductFieldDisplayHints.js',
-  'src/PaymentProductField.js',
-  'src/PaymentProduct.js',
-  'src/PaymentProductGroup.js',
-  'src/BasicPaymentProducts.js',
-  'src/BasicPaymentProductGroups.js',
-  'src/BasicPaymentItems.js',
-  'src/PaymentRequest.js',
-  'src/C2SPaymentProductContext.js',
-  'src/JOSEEncryptor.js',
-  'src/Encryptor.js',
-  'src/session.js'
-];
+gulp.task('ts', function () {
+  var tsProject = ts.createProject('tsconfig.json');
+  return tsProject.src()
+    .pipe(sourcemaps.init())
+    .pipe(tsProject())
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest('./')) // combined with tsconfig.json's outFile, this will create ./dist/index.js
+    .on('end', function() {
+      return del(['./dist/index.d.ts.map']); // remove sourcemap for TypeScript definition
+    });
+});
 
-var VERSION = fs.readFileSync('VERSION.TXT', 'utf8');
-
-gulp.task('createFullSdk', function (done) {
-  gulp.src(fullSdkSrc)
+gulp.task('createFullSdk', function () {
+  return gulp.src(fullSdkSrc)
     .pipe(sourcemaps.init())
     .pipe(concat('connectsdk.js'))
-    .pipe(replace(/\$\{version\}/g, VERSION))
     .pipe(gulp.dest('./dist/'))
     .pipe(concat('connectsdk.min.js'))
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./dist/'));
-  done();
 });
 
-gulp.task('createSdkNoEncryption', function (done) {
-  gulp.src(sdkSrcNoEncryption)
+gulp.task('createSdkNoEncryption', function () {
+  return gulp.src(sdkSrcNoEncryption)
     .pipe(sourcemaps.init())
     .pipe(concat('connectsdk.noEncrypt.js'))
-    .pipe(replace(/\$\{version\}/g, VERSION))
     .pipe(gulp.dest('./dist/'))
     .pipe(concat('connectsdk.noEncrypt.min.js'))
     .pipe(uglify())
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest('./dist/'));
-  done();
 });
 
 // clean folder
-gulp.task('clean', function (cb) {
-  return gulp.src('./dist', { read: false }).pipe(plumber()).pipe(rimraf());
+gulp.task('clean', function () {
+  return del(['./dist']);
 });
 
-gulp.task('build', gulp.parallel('createFullSdk', 'createSdkNoEncryption'));
+gulp.task('build', gulp.series('ts', gulp.parallel('createFullSdk', 'createSdkNoEncryption')));
 
 gulp.task('watch', function () {
-  gulp.watch(['src/*.js'], gulp.series('build'))
+  gulp.watch(['src/*.ts'], gulp.series('build'))
 });
 
 gulp.task('default', function () {

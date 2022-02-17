@@ -1,6 +1,9 @@
 node_modules
+/dist
+/docs
 /.project
 /npm-debug.log
 .vscode
 .idea
 *.iml
+junit.xml
