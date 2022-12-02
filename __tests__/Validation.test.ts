@@ -214,6 +214,10 @@ describe("validation", () => {
       const paymentRequest = createPaymentRequest();
       const date = new Date();
       date.setMonth(date.getMonth() - 1);
+      // DST can cause October 31st minus 1 month to be October 1st; subtract another day if that occurs
+      if (date.getMonth() === new Date().getMonth()) {
+        date.setDate(date.getDate() - 1);
+      }
       const value = dateformat(date, "mmyy");
       paymentRequest.setValue(paymentProductField.id, value);
       expect(rule.validateValue(paymentRequest, paymentProductField.id)).toBe(false);

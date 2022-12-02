@@ -15,7 +15,7 @@ function createInstance(): Util {
       return {
         screenSize: window.innerWidth + "x" + window.innerHeight,
         platformIdentifier: window.navigator.userAgent,
-        sdkIdentifier: (document["GC"] && document["GC"].rppEnabledPage ? "rpp-" : "") + "JavaScriptClientSDK/v4.0.1",
+        sdkIdentifier: (document["GC"] && document["GC"].rppEnabledPage ? "rpp-" : "") + "JavaScriptClientSDK/v4.0.2",
         sdkCreator: "Ingenico",
       };
     },
