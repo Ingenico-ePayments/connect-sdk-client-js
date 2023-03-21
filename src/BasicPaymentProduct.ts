@@ -1,6 +1,7 @@
 ///<amd-module name="connectsdk.BasicPaymentProduct"/>
 
 import AccountOnFile = require("./AccountOnFile");
+import AuthenticationIndicator = require("./AuthenticationIndicator");
 import PaymentProduct302SpecificData = require("./PaymentProduct302SpecificData");
 import PaymentProduct320SpecificData = require("./PaymentProduct320SpecificData");
 import PaymentProduct863SpecificData = require("./PaymentProduct863SpecificData");
@@ -24,18 +25,23 @@ class BasicPaymentProduct {
   readonly allowsTokenization: boolean;
   readonly autoTokenized: boolean;
   readonly allowsInstallments: boolean;
+  readonly authenticationIndicator?: AuthenticationIndicator;
   readonly acquirerCountry?: string;
+  readonly canBeIframed?: boolean;
+  readonly deviceFingerprintEnabled: boolean;
   readonly displayHints: PaymentProductDisplayHints;
   readonly id: number;
+  readonly isJavaScriptRequired?: boolean;
   readonly maxAmount?: number;
   readonly minAmount?: number;
   readonly paymentMethod: string;
   readonly mobileIntegrationLevel: string;
   readonly usesRedirectionTo3rdParty: boolean;
-  readonly paymentProductGroup?: string;
   readonly paymentProduct302SpecificData?: PaymentProduct302SpecificData;
   readonly paymentProduct320SpecificData?: PaymentProduct320SpecificData;
   readonly paymentProduct863SpecificData?: PaymentProduct863SpecificData;
+  readonly paymentProductGroup?: string;
+  readonly supportsMandates?: boolean;
   readonly type = "product";
 
   constructor(readonly json: BasicPaymentProductJSON) {
@@ -47,15 +53,22 @@ class BasicPaymentProduct {
     this.autoTokenized = json.autoTokenized;
     this.allowsInstallments = json.allowsInstallments;
     this.acquirerCountry = json.acquirerCountry;
+    this.canBeIframed = json.canBeIframed;
+    this.deviceFingerprintEnabled = json.deviceFingerprintEnabled;
     this.displayHints = new PaymentProductDisplayHints(json.displayHints);
     this.id = json.id;
+    this.isJavaScriptRequired = json.isJavaScriptRequired;
     this.maxAmount = json.maxAmount;
     this.minAmount = json.minAmount;
     this.paymentMethod = json.paymentMethod;
     this.mobileIntegrationLevel = json.mobileIntegrationLevel;
     this.usesRedirectionTo3rdParty = json.usesRedirectionTo3rdParty;
     this.paymentProductGroup = json.paymentProductGroup;
+    this.supportsMandates = json.supportsMandates;
 
+    if (json.authenticationIndicator) {
+      this.authenticationIndicator = new AuthenticationIndicator(json.authenticationIndicator);
+    }
     if (json.paymentProduct302SpecificData) {
       this.paymentProduct302SpecificData = new PaymentProduct302SpecificData(json.paymentProduct302SpecificData);
     }

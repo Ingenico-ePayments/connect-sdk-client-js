@@ -45,6 +45,7 @@ export interface BasicPaymentProductJSON {
   paymentProduct320SpecificData?: PaymentProduct320SpecificDataJSON;
   paymentProduct863SpecificData?: PaymentProduct863SpecificDataJSON;
   paymentProductGroup?: string;
+  supportsMandates?: boolean;
   usesRedirectionTo3rdParty: boolean;
   // added by the SDK
   type?: "product";

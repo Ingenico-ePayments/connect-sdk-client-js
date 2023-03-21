@@ -17,11 +17,13 @@ function _parseJSON(_json: PaymentProductJSON, _paymentProductFields: PaymentPro
 class PaymentProduct extends BasicPaymentProduct {
   readonly paymentProductFields: PaymentProductField[];
   readonly paymentProductFieldById: { [id: string]: PaymentProductField | undefined };
+  readonly fieldsWarning?: string;
 
   constructor(readonly json: PaymentProductJSON) {
     super(json);
     this.paymentProductFields = [];
     this.paymentProductFieldById = {};
+    this.fieldsWarning = json.fieldsWarning;
 
     _parseJSON(json, this.paymentProductFields, this.paymentProductFieldById);
   }
