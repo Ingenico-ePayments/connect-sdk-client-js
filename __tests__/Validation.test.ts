@@ -3,6 +3,7 @@
  */
 
 import dateformat = require("dateformat");
+import duration = require("duration-fns");
 import { PaymentProductFieldJSON, PaymentProductJSON } from "../src/apimodel";
 import PaymentProduct = require("../src/PaymentProduct");
 import PaymentRequest = require("../src/PaymentRequest");
@@ -201,10 +202,10 @@ describe("validation", () => {
       expect(rule.validate(value)).toBe(false);
     });
 
-    test("valid", () => {
+    test.each(["mmyy", "mmyyyy"])("valid (format: %s)", (format) => {
       const paymentRequest = createPaymentRequest();
       const date = new Date();
-      const value = dateformat(date, "mmyy");
+      const value = dateformat(date, format);
       paymentRequest.setValue(paymentProductField.id, value);
       expect(rule.validateValue(paymentRequest, paymentProductField.id)).toBe(true);
       expect(rule.validate(value)).toBe(true);
@@ -212,12 +213,8 @@ describe("validation", () => {
 
     test("expired", () => {
       const paymentRequest = createPaymentRequest();
-      const date = new Date();
-      date.setMonth(date.getMonth() - 1);
-      // DST can cause October 31st minus 1 month to be October 1st; subtract another day if that occurs
-      if (date.getMonth() === new Date().getMonth()) {
-        date.setDate(date.getDate() - 1);
-      }
+      const period = duration.parse("P-1M");
+      const date = duration.apply(new Date(), period);
       const value = dateformat(date, "mmyy");
       paymentRequest.setValue(paymentProductField.id, value);
       expect(rule.validateValue(paymentRequest, paymentProductField.id)).toBe(false);

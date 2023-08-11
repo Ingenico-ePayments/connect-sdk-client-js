@@ -1,6 +1,6 @@
 {
   "name": "connect-sdk-client-js",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "The JavaScript based client SDK that can be used for client to server communication between you and the Ingenico ePayments platform",
   "homepage": "https://github.com/Ingenico-ePayments/connect-sdk-client-js#readme",
   "bugs": {
@@ -41,6 +41,7 @@
     "@typescript-eslint/parser": "^5.10.0",
     "dateformat": "^4.5.1",
     "del": "^6.0.0",
+    "duration-fns": "^3.0.2",
     "eslint": "^8.7.0",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
